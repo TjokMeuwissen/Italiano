@@ -1,0 +1,4105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f6b4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Italiano">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Italian Vocab Trainer</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one centred column; setup card → quiz card → results, with the score log below */
+:root{
+  --bg:#f3f5f1; --surface:#ffffff; --ink:#1d2b24; --muted:#5f6d66; --line:#d6ddd7;
+  --accent:#1f6b4f; --accent-ink:#ffffff; --saffron:#d89a1e;
+  --good:#1f7a43; --good-bg:#e3f3e8; --bad:#b4372c; --bad-bg:#f8e4e1; --warn-bg:#fbf0d6;
+  --display:"Gloock", Georgia, "Times New Roman", serif;
+  --body:"Instrument Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121915; --surface:#1a2420; --ink:#e7eee9; --muted:#9aaaa2; --line:#2e3c36;
+  --accent:#4fb58b; --accent-ink:#0d1712; --saffron:#e7b24a;
+  --good:#6fd394; --good-bg:#183225; --bad:#f08a7e; --bad-bg:#3a1f1c; --warn-bg:#3a3018; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121915; --surface:#1a2420; --ink:#e7eee9; --muted:#9aaaa2; --line:#2e3c36;
+  --accent:#4fb58b; --accent-ink:#0d1712; --saffron:#e7b24a;
+  --good:#6fd394; --good-bg:#183225; --bad:#f08a7e; --bad-bg:#3a1f1c; --warn-bg:#3a3018; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+details.fold{border:1px solid var(--line);border-radius:12px;padding:0 14px}
+details.fold>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"Show";font-size:.85rem;font-weight:600;color:var(--accent)}
+details.fold[open]>summary::after{content:"Hide"}
+details.fold>summary:focus-visible{outline:2px solid var(--saffron);outline-offset:2px;border-radius:6px}
+details.fold .inner{display:grid;gap:8px;padding-bottom:14px}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:calc(28px + env(safe-area-inset-top,0px)) calc(48px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:760px;margin:0 auto;display:grid;gap:22px}
+header h1{font-family:var(--display);font-weight:400;font-size:clamp(2rem,6vw,2.8rem);line-height:1.05;margin:0;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:18px;min-width:0}
+h2{font-family:var(--display);font-weight:400;font-size:1.45rem;margin:0}
+.label{font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.stack{display:grid;gap:8px}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;overflow:hidden;max-width:100%}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{padding:8px 16px;cursor:pointer;font-weight:500;font-size:.95rem}
+.seg input:checked+label{background:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible+label{outline:2px solid var(--saffron);outline-offset:-2px}
+.seg.big label{padding:10px 18px;font-weight:600}
+input[type=number],input[type=text],select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+input[type=number]{width:90px}
+input:disabled,select:disabled{opacity:.8}
+input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--saffron);outline-offset:2px}
+.cats{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:.88rem;cursor:pointer;user-select:none}
+.chip input{accent-color:var(--accent);margin:0}
+.chip .n{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.8rem}
+button{font:inherit;font-weight:600;border-radius:10px;padding:10px 18px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.link{border:none;background:none;padding:4px 6px;color:var(--accent);font-weight:600}
+button:disabled{opacity:.5;cursor:not-allowed}
+.small{font-size:.88rem;color:var(--muted)}
+.hint{font-size:.85rem;color:var(--muted);margin:0;max-width:62ch}
+.progress{height:6px;background:var(--line);border-radius:999px;overflow:hidden}
+.progress>i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.qmeta{display:flex;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums}
+.prompt{font-family:var(--display);font-size:clamp(2rem,8vw,3.2rem);line-height:1.1;text-align:center;padding:18px 0 6px;overflow-wrap:anywhere}
+.dir{text-align:center}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px;margin:2px;font-size:.88rem;color:var(--ink)}
+.tag.strong{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+#ansForm{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}
+#fields{flex:1 1 260px;min-width:0;display:flex;flex-wrap:wrap;gap:10px}
+#fields>input{flex:1 1 200px;font-size:1.1rem}
+#fields.ident>input{flex:2 1 180px}
+#fields.ident>select{flex:1 1 130px}
+#fields.table{flex-basis:100%;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 14px;align-items:start}
+#fields.table .who{padding-top:11px;font-weight:600;color:var(--muted);text-align:right;min-width:4.5em}
+#fields.table .cell{display:grid;gap:3px;min-width:0}
+#fields.table input{width:100%;font-size:1.05rem}
+.mark{font-size:.88rem;font-weight:600}
+.mark.ok{color:var(--good)} .mark.no{color:var(--bad)}
+.feedback{border-radius:10px;padding:12px 14px;display:grid;gap:4px}
+.feedback.good{background:var(--good-bg);color:var(--good)}
+.feedback.bad{background:var(--bad-bg);color:var(--bad)}
+.feedback.close{background:var(--warn-bg)}
+.feedback b,.feedback .ref{color:var(--ink)}
+.ref{font-size:.88rem}
+.score-big{font-family:var(--display);font-size:3.2rem;line-height:1;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:.8rem;font-weight:600}
+.pill.hi{background:var(--good-bg);color:var(--good)} .pill.mid{background:var(--warn-bg);color:var(--ink)} .pill.lo{background:var(--bad-bg);color:var(--bad)}
+.empty{color:var(--muted);padding:6px 0}
+.trend{margin:0;padding:12px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line);max-width:none}
+.trend.up{background:var(--good-bg);border-color:transparent}
+.trend.down{background:var(--warn-bg);border-color:transparent}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--bad-bg);padding:10px 12px;border-radius:10px}
+@media (prefers-reduced-motion:reduce){.progress>i{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Italian Vocab Trainer</h1>
+    <p>Words and verbs from your <em>Basic Italian Vocabulary &amp; Grammar</em> guide and the Collins <em>Italian 3000 Words and Phrases</em>. Translate words, drill single verb forms, or write out whole conjugations. After each round you see your score and how it compares with your earlier rounds.</p>
+  </header>
+
+  <!-- SETUP -->
+  <section class="card" id="setup">
+    <div class="row" style="justify-content:space-between">
+      <h2>New round</h2>
+      <span class="small" id="poolInfo"></span>
+    </div>
+    <div class="stack">
+      <span class="label">Test</span>
+      <div class="seg big" role="radiogroup">
+        <input type="radio" name="mode" id="m-vocab" value="vocab" checked><label for="m-vocab">Vocabulary</label>
+        <input type="radio" name="mode" id="m-form" value="form"><label for="m-form">Verb forms</label>
+        <input type="radio" name="mode" id="m-table" value="table"><label for="m-table">Full conjugation</label>
+      </div>
+      <p class="hint" id="modeHint"></p>
+    </div>
+
+    <div class="stack" id="vocabScopeBox">
+      <span class="label">Words</span>
+      <div class="seg" role="radiogroup">
+        <input type="radio" name="vscope" id="v-all" value="all" checked><label for="v-all">All words</label>
+        <input type="radio" name="vscope" id="v-verbs" value="verbs"><label for="v-verbs">Verbs only (infinitive)</label>
+      </div>
+    </div>
+
+    <div class="stack" id="vocabDirBox">
+      <span class="label">Direction</span>
+      <div class="seg" role="radiogroup">
+        <input type="radio" name="dir" id="d-it" value="it-en" checked><label for="d-it">IT → EN</label>
+        <input type="radio" name="dir" id="d-en" value="en-it"><label for="d-en">EN → IT</label>
+        <input type="radio" name="dir" id="d-mix" value="mix"><label for="d-mix">Random</label>
+      </div>
+    </div>
+
+    <div class="stack" id="formDirBox" hidden>
+      <span class="label">Direction</span>
+      <div class="seg" role="radiogroup">
+        <input type="radio" name="fdir" id="f-give" value="give" checked><label for="f-give">Verb → form</label>
+        <input type="radio" name="fdir" id="f-ident" value="ident"><label for="f-ident">Form → verb</label>
+        <input type="radio" name="fdir" id="f-mix" value="mix"><label for="f-mix">Random</label>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="stack">
+        <label class="label" for="count" id="countLabel">Number of questions</label>
+        <div class="row"><input type="number" id="count" min="1" value="20">
+          <button class="link" type="button" data-n="10">10</button><button class="link" type="button" data-n="20">20</button><button class="link" type="button" data-n="50">50</button><button class="link" type="button" data-n="all">All</button></div>
+      </div>
+      <label class="chip" style="align-self:end"><input type="checkbox" id="accents" checked> Ignore accents</label>
+    </div>
+
+    <details class="fold" id="topicBox">
+      <summary><span><span class="label">Topics</span> <span class="small" id="topicSum"></span></span></summary>
+      <div class="inner">
+        <div><button class="link" type="button" id="allCats">Select all</button><button class="link" type="button" id="noCats">Clear</button></div>
+        <div class="cats" id="cats"></div>
+      </div>
+    </details>
+
+    <details class="fold" id="verbBox" hidden>
+      <summary><span><span class="label">Tenses &amp; verb groups</span> <span class="small" id="verbSum"></span></span></summary>
+      <div class="inner">
+        <span class="label">Tenses</span>
+        <div class="cats" id="tenses"></div>
+        <span class="label" style="margin-top:6px">Verb groups</span>
+        <div class="cats" id="groups"></div>
+      </div>
+    </details>
+
+    <div class="row"><button class="primary" id="start">Start round</button><span class="small" id="startErr"></span></div>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="card" id="quiz" hidden>
+    <div class="qmeta small"><span id="qnum"></span><span id="qscore"></span></div>
+    <div class="progress"><i id="bar"></i></div>
+    <div>
+      <div class="label dir" id="qdir"></div>
+      <div class="prompt" id="qprompt"></div>
+      <div class="dir" id="qcat"></div>
+    </div>
+    <form id="ansForm" autocomplete="off">
+      <div id="fields"></div>
+      <button class="primary" id="submitBtn">Check</button>
+    </form>
+    <div id="fb" hidden></div>
+    <div class="row" style="justify-content:space-between">
+      <button type="button" id="skip">Don't know</button>
+      <span class="row"><button type="button" class="link" id="override" hidden>I was right</button><button type="button" id="quit">Stop round</button></span>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="card" id="results" hidden>
+    <h2>Round finished</h2>
+    <div class="row" style="gap:18px"><span class="score-big" id="rScore"></span><span id="rPct" class="small"></span></div>
+    <p id="rTrend" class="trend" hidden></p>
+    <div id="rMistakes"></div>
+    <div class="row"><button class="primary" id="again">New round</button><button id="retry">Retry my mistakes</button></div>
+  </section>
+
+  <!-- LOG -->
+  <section class="card" id="logCard" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>Score log</h2>
+      <span><button class="link" id="copyLog">Copy as CSV</button><button class="link" id="clearLog">Clear log</button></span>
+    </div>
+    <p id="logTrend" class="trend" hidden></p>
+    <div class="tablewrap" id="logSummaryWrap" hidden><table><thead><tr><th>Test</th><th>Rounds</th><th>Overall</th><th>Last round</th></tr></thead><tbody id="logSummary"></tbody></table></div>
+    <div class="label" id="histLabel" hidden>History</div>
+    <div id="clearConfirm" hidden class="confirm"><span>Delete every saved round?</span><button id="clearYes">Delete log</button><button id="clearNo">Keep it</button></div>
+    <div class="tablewrap"><table><thead><tr><th>Date</th><th>Test</th><th>Score</th></tr></thead><tbody id="logBody"></tbody></table></div>
+    <p class="small" style="margin:0">The log is saved in this browser only. Use "Copy as CSV" to keep a backup.</p>
+  </section>
+</div>
+
+<script>
+const RAW = {
+"Personality":`gentile|nice, kind
+scortese|rude, impolite
+buono|good
+cattivo|bad
+simpatico|nice, likeable
+antipatico|unpleasant
+generoso|generous
+avaro|stingy
+tirchio|stingy, mean
+calmo|calm
+nervoso|nervous
+divertente|funny
+serio|serious
+spiritoso|witty
+imparziale|impartial
+interessante|interesting
+noioso|boring
+normale|normal
+strano|strange
+virtuoso|virtuous
+egocentrico|self-centered, self-centred
+profondo|deep
+superficiale|superficial
+ordinario|ordinary
+appariscente|glamorous, showy
+attento|careful, attentive
+disattento|careless
+prudente|prudent, cautious
+spericolato|reckless
+sposato|married
+celibe|bachelor, single (man)
+nubile|bachelorette, single (woman)
+chiacchierone|talkative
+timido|shy
+tranquillo|peaceful, quiet
+rumoroso|loud, noisy
+sicuro|certain, safe
+permaloso|touchy, sensitive
+affettuoso|affectionate
+irritante|annoying
+curioso|curious, inquisitive
+disinteressato|disinterested
+famoso|famous
+sconosciuto|unknown
+forte|strong
+debole|weak
+intelligente|intelligent
+stupido|stupid
+giovane|young
+anziano|old, elderly
+allegro|happy, cheerful
+triste|sad
+`,
+"Physical traits":`grasso|fat
+magro|thin
+alto|tall
+basso|short
+bello|beautiful
+brutto|ugly
+atletico|athletic
+sportivo|sporty
+muscoloso|muscular
+gracile|frail, puny
+`,
+"Hair":`capelli lunghi|long hair
+capelli corti|short hair
+capelli lisci|straight hair
+calvo|bald
+capelli ricci|curly hair
+capelli mossi|wavy hair
+brunetta|brunette
+capelli castani|brown hair
+capelli scuri|dark hair
+biondo|blond
+barba|beard
+baffi|mustache, moustache
+`,
+"Clothing":`pantaloni|pants, trousers
+pantaloncini|shorts
+vestito|dress
+gonna|skirt
+maglione|sweater, jumper
+maglietta|t-shirt
+camicia|dress shirt, shirt
+camicetta|blouse
+cappotto|coat
+giacca|jacket
+abito|suit
+impermeabile|raincoat
+cravatta|tie
+sciarpa|scarf
+cappello|hat
+guanti|gloves
+scarpe|shoes
+stivali|boots
+calzini|socks
+sandali|sandals
+occhiali da vista|glasses
+occhiali da sole|sunglasses
+costume da bagno|bathing suit, swimsuit
+orecchini|earrings
+cintura|belt
+collana|necklace
+bracciale|bracelet
+il camerino|fitting room
+l'ombrello (m)|umbrella
+la pelle|leather
+gli abiti|clothes/clothing
+casual|casual
+la seta|silk
+la taglia|size (clothing)
+l'abbigliamento intimo (m)|underwear
+la lana|wool
+il numero|size (shoe)
+il denim|denim
+petite|petite
+il portafoglio|wallet
+il cotone|cotton
+taglie forti|plus-size
+il borsellino|purse
+il poliestere|polyester
+i gioielli|jewellery
+i pantacollant|leggings
+il bikini|bikini
+le mutande|pants
+la vestaglia|dressing gown
+il pigiama|pyjamas
+i boxer|boxer shorts
+i jeans|jeans
+il reggiseno|bra
+i calzoncini|shorts
+la tuta da ginnastica|jogging bottoms
+il cardigan|cardigan
+l'abito (a tre pezzi) (m)|(three-piece) suit
+la T-shirt|T-shirt
+la felpa|sweatshirt
+la giacca impermeabile|waterproof jacket
+il collant|tights
+gli orecchini mpl|earrings
+il berretto con visiera|baseball cap
+la cinta|belt
+il cappello di lana|woolly hat
+la borsa|handbag
+le scarpe stringate|lace-up shoes
+le pantofole|slippers
+i tacchi alti|high heels
+le scarpe da ginnastica|trainers
+`,
+"Professions":`infermiere|nurse
+medico|doctor
+dentista|dentist
+dottore|doctor
+attore|actor
+attrice|actress
+ballerina|dancer
+studente|student
+ingegnere|engineer
+avvocato|lawyer
+cameriere|waiter
+barista|bartender
+poliziotto|policeman, police officer
+architetto|architect
+cuoco|cook
+calciatore|soccer player, football player
+autista|driver
+casalinga|housewife
+lavoratore|worker
+capo|boss
+Sono in pensione.|I'm retired.
+Sono un lavoratore autonomo.|I'm self-employed.
+Dove lavora?|Where do you work?
+Sto viaggiando.|I'm travelling.
+Che fa nella vita?|What do you do?
+Sono disoccupato.|I'm unemployed.
+Lavoro da casa.|I work from home.
+Che lavoro fa?|What's your occupation?
+Vado all'università.|I'm at university.
+Lavora / Studia?|Do you work/study?
+l'impiegato delle poste (m) / l'impiegata delle poste (f)|postal worker
+il contadino / la contadina|farmer
+il pompiere|firefighter
+il marinaio|sailor
+il pescatore|fisherman
+il venditore / la venditrice|salesperson
+il tecnico informatico|IT worker
+il costruttore|builder
+lo chef|chef
+lo scienziato / la scienziata|scientist
+il falegname|joiner
+il funzionario pubblico / la funzionaria pubblica|civil servant
+il giornalista / la giornalista|journalist
+il soldato|soldier
+il professore / la professoressa|teacher
+l'addetto alle pulizie (m) / l'addetta alle pulizie (f)|cleaner
+il meccanico|mechanic
+il veterinario / la veterinaria|vet
+l'impiegato (m) / l'impiegata (f)|office worker
+la cameriera|waitress
+l'idraulico (m)|plumber
+l'impresa|business
+l'elettricista (m)|electrician
+la società|company
+`,
+"Inside the house":`soffitto|ceiling
+pavimento|floor
+tappeto|carpet, rug
+cassettiera|chest of drawers
+lampada|lamp
+ventilatore|fan
+porta|door
+finestra|window
+mensola|shelf, bookshelf
+tenda|curtain
+sedia|chair
+poltrona|armchair
+divano|couch, sofa
+quadro|painting
+armadio|wardrobe
+credenza|dresser, sideboard
+scrivania|desk
+cattedra|big desk, teacher's desk
+televisione|television, tv
+telecomando|remote, remote control
+orologio|clock, watch
+tastiera|keyboard
+cestino|trash can, bin
+lavagna|blackboard
+gomma|eraser
+il condominio|block of flats
+il balcone|balcony
+la casa vacanza|holiday let
+il proprietario|landlord
+la villa|villa
+affittare|to rent
+la proprietaria|landlady
+la casa in città|townhouse
+l'affittuario (m)|tenant
+il vicino di casa / la vicina di casa|neighbour
+l'indirizzo (m)|address
+cambiare casa|to move house
+il sobborgo|suburb
+il mutuo|mortgage
+costruire una casa|to build a house
+l'affitto (m)|rent
+l'agente immobiliare (m)|estate agent
+il villino|detached house
+la casa bifamiliare|semi-detached house
+il bungalow|bungalow
+la fattoria|farmhouse
+il monolocale|studio flat
+la porta sul retro|back door
+l'adattatore (m)|adaptor
+la porta finestra|French windows
+la presa|socket
+la cantina|cellar
+l'elettricità (f)|electricity
+la mansarda|attic
+il lucernario|skylight
+il blackout|power cut
+il riscaldamento centralizzato|central heating
+il muro|wall
+riparare|to fix
+l'antenna parabolica (f)|satellite dish
+il portico|porch
+ristrutturare|to renovate
+la spina|plug
+l'allarme di sicurezza (m)|security alarm
+la stufa|heater
+la caldaia|boiler
+la lampadina|light bulb
+il ventilatore da soffitto|ceiling fan
+il rilevatore di fumo|smoke alarm
+il contatore|meter
+il termostato|thermostat
+la prolunga|extension cable
+il termosifone|radiator
+la stufa a legna|wood-burning stove
+il quadro elettrico|fusebox
+il timpano|gable
+il comignolo|chimney
+il cancello|gate
+la porta d'ingresso|front door
+l'antenna (f)|aerial
+la serranda|shutter
+la grondaia|gutter
+il viale|driveway
+il tubo di scarico|drainpipe
+appendere la giacca|to hang one's jacket up
+l'ascensore (m)|lift
+l'entrata (f)|doorway
+lo zerbino|doormat
+il citofono|intercom
+la chiave|key
+la cassetta della posta|letterbox
+far entrare qualcuno|to buzz somebody in
+il pianerottolo|landing
+pulirsi le scarpe|to wipe one's feet
+la tromba delle scale|stairwell
+la scala|staircase
+la TV on demand|TV on demand
+l'home theater (m)|home entertainment system
+l'asse del pavimento (f)|floorboard
+la televisione via cavo|cable TV
+la suite|suite
+la televisione satellitare|satellite TV
+guardare la televisione|to watch TV
+il divano letto|sofa bed
+la smart TV|smart TV
+la lampada da tavolo|table lamp
+il lettore DVD / Blu-ray®|DVD/Blu-ray® player
+il porta TV|TV stand
+le tende|curtains
+la radio|radio
+la tenda veneziana|Venetian blind
+l'armadio espositivo (m)|display cabinet
+il soprammobile|ornament
+la luce a muro|wall light
+lo scaffale|shelves
+il televisore|TV
+il camino|fireplace
+il poggiapiedi|footstool
+il cuscino|cushion
+il bagno privato|en-suite bathroom
+il letto singolo|single bed
+la stanza dei bambini|nursery
+il letto matrimoniale|double bed
+fare il letto|to make the bed
+la camera da letto|master bedroom
+la biancheria da letto|bedding
+cambiare le lenzuola|to change the sheets
+andare a letto|to go to bed
+il cesto della biancheria|laundry basket
+la gruccia|coat hanger
+la coperta|blanket
+il comò|dressing table
+i letti a castello|bunk beds
+la trapunta|quilt
+l'asciugacapelli (m)|hairdryer
+la radiosveglia|clock radio
+le lenzuola|sheets
+il piumone|duvet
+lo specchio|mirror
+il materasso|mattress
+il letto|bed
+il comodino|bedside table
+l'abat-jour (m)|bedside lamp
+lavarsi le mani|to wash one's hands
+lo scarico|drain
+la tenda da doccia|shower curtain
+lavarsi i denti|to brush one's teeth
+fare la doccia|to shower
+il sedile del gabinetto|toilet seat
+andare al gabinetto|to go to the toilet
+farsi un bagno|to have a bath
+gli articoli per l'igiene personale|toiletries
+la spugna|sponge
+l'asciugamano per le mani (m)|hand towel
+il tappetino da bagno|bath mat
+lo scopino del water|toilet brush
+la spugna per la doccia|shower puff
+l'asciugamano da bagno (m)|bath towel
+il rotolo di carta igienica|toilet roll
+il sapone|soap
+l'asciugamano per il viso (m)|face cloth
+il bidè|bidet
+il portasciugamani|towel rail
+lo schermo doccia|shower screen
+il lavandino|wash-hand basin
+la vasca da bagno|bath
+l'armadietto (m)|cabinet
+la doccia|shower
+il gabinetto|toilet
+il sentiero|path
+lo steccato|fence
+il traliccio|trellis
+i fiori|flowers
+la casetta per gli uccelli|birdbox
+il patio|patio
+l'arredamento da giardino (m)|garden furniture
+il vaso da fiori|flowerpot
+mettere a posto|to tidy up
+la pastiglia per la lavastoviglie|dishwasher tablet
+il ripostiglio|utility room
+gli elettrodomestici|household appliances
+il detersivo per il bucato|laundry detergent
+portare fuori la spazzatura|to take out the bin
+le faccende|chores
+il detersivo per i piatti|washing-up liquid
+il cestino della spazzatura|wastepaper basket
+la scopa|brush
+spazzare il pavimento|to sweep the floor
+il secchio|bucket
+la bacinella|basin
+fare il bucato|to do the laundry
+lo straccio|cloth
+la candeggina|bleach
+passare l'aspirapolvere|to hoover
+lo stendino|clothes horse
+il disinfettante|disinfectant
+lo strofinaccio|tea towel
+il ferro da stiro|iron
+le mollette da bucato|clothes pegs
+l'asciugatrice (f)|tumble drier
+la tavola da stiro|ironing board
+la lavastoviglie|dishwasher
+l'aspirapolvere (f)|vacuum cleaner
+il mocio|mop
+il bidone della spazzatura|dustbin
+il filo del bucato|washing line
+i guanti di gomma|rubber gloves
+la paletta per la spazzatura|dustpan
+la lavatrice|washing machine
+`,
+"Rooms":`stanza|room
+piano|floor, storey
+camera|bedroom
+camera degli ospiti|spare bedroom, guest room
+cucina|kitchen
+sala da pranzo|dining room
+salotto|living room
+soggiorno|living room, family room
+studio|study
+lavanderia|laundry room
+garage|garage
+terrazza|terrace
+bagno|bathroom
+tetto|roof
+al piano terra|ground floor, on the ground floor
+al piano di sopra|upstairs
+`,
+"Outside & nature":`cielo|sky
+stella|star
+sole|sun
+luna|moon
+montagna|mountain
+cima|summit
+collina|hill
+vetta|peak
+pianura|plain
+valle|valley
+bosco|forest, woods
+albero|tree
+cespuglio|bush
+fiore|flower
+campo|field
+prato|lawn, meadow, grass
+mare|sea
+costa|coast
+spiaggia|beach
+sabbia|sand
+sponda|bank
+riva|bank, shore
+fiume|river
+ruscello|stream
+lago|lake
+laghetto|pond
+roccia|rock
+cascata|waterfall
+parco|park
+giardino|garden
+rimuovere le erbacce|to weed
+il concime|compost
+il terreno|soil
+annaffiare|to water
+il lotto di terreno|allotment
+l'erba (f)|grass
+coltivare|to grow
+il giardiniere|gardener
+la pianta|plant
+piantare|to plant
+l'erbaccia (f)|weed
+la paletta da giardiniere|trowel
+la zappa|hoe
+il pavimento in legno|decking
+il tagliaerba|lawnmower
+l'annaffiatoio (m)|watering can
+il rastrello|garden fork
+il parasole|parasol
+il diserbante|weedkiller
+il tubo da giardino|garden hose
+il vaso|plant pot
+gli stivali di gomma|Wellington boots
+i guanti da giardinaggio|gardening gloves
+le cesoie da giardiniere|pruners
+la carriola|wheelbarrow
+il capanno da giardino|garden shed
+la fioriera|windowbox
+la vanga|spade
+la serra|greenhouse
+il ramo|branch
+il polline|pollen
+il gambo|stalk
+il tronco|trunk
+il bocciolo|bud
+la corteccia|bark
+il legno|wood
+il petalo|petal
+la radice|root
+il bulbo|bulb
+la primula|primrose
+il giacinto|hyacinth
+il ranuncolo|buttercup
+la rosa|rose
+il giglio|lily
+il garofano|carnation
+il girasole|sunflower
+l'orchidea (f)|orchid
+il crisantemo|chrysanthemum
+il tulipano|tulip
+la viola|pansy
+il narciso|daffodil
+la violetta|violet
+il papavero|poppy
+la margherita|daisy
+l'ulivo (m)|olive
+l'edera (f)|ivy
+il castagno|chestnut
+il pino|pine
+la lavanda|lavender
+il cipresso|cypress
+il platano|plane
+il lillà|lilac
+l'abete (m)|fir
+il pioppo|poplar
+il muschio|moss
+il salice|willow
+la quercia|oak
+la vite|grapevine
+rurale|rural
+l'estuario (m)|estuary
+urbano|urban
+l'aria (f)|air
+polare|polar
+l'atmosfera (f)|atmosphere
+alpino|alpine
+l'alba (f)|sunrise
+il fango|mud
+tropicale|tropical
+il tramonto|sunset
+l'acqua (f)|water
+le rocce fpl|rocks
+la grotta|cave
+la boscaglia|scrub
+il deserto|desert
+la palude|marsh
+il terreno agricolo|farmland
+la vallata|valley
+la foresta|forest
+il vulcano|volcano
+lo stagno|pond
+il ghiacciaio|glacier
+la prateria|grassland
+la scogliera|cliff
+la barriera corallina|coral reef
+il ristagno d'acqua tra le rocce|rockpool
+l'aurora boreale (f)|aurora
+le stelle|stars
+le nuvole|clouds
+l'arcobaleno (m)|rainbow
+`,
+"Geography":`pianeta|planet
+Terra|Earth
+mondo|world
+continente|continent
+penisola|peninsula
+isola|island
+oceano|ocean
+paese|country, village
+campagna|countryside, country
+città|city
+punti cardinali|compass points, cardinal points
+nord|north
+sud|south
+est|east
+ovest|west
+orientale|eastern
+occidentale|western
+`,
+"The city":`edificio|building
+palazzo|building, palace
+statua|statue
+ponte|bridge
+fontana|fountain
+monumento|monument
+marciapiede|sidewalk, pavement
+centro storico|historical center, historic centre, old town
+aiuola|flower bed
+panchina|bench
+quartiere|neighborhood, neighbourhood
+tabellone|billboard
+traffico|traffic
+abitanti|inhabitants
+piazza|square
+semaforo|traffic light
+borgo|district, village
+largo|small square
+strada|street, road
+vicolo|alley, lane
+ingresso|entrance
+corso|main street, avenue
+uscita|exit
+prelevare|to withdraw
+lo scoperto|overdraft
+la filiale|branch
+cambiare dei soldi|to change money
+il bonifico bancario|bank transfer
+il cassiere / la cassiera|cashier
+lo sportello bancomat|ATM
+il blocchetto degli assegni|chequebook
+i servizi bancari online|online banking
+la moneta|currency
+il conto bancario|bank account
+l'ufficio di cambio (m)|bureau de change
+il prestito|loan
+il conto corrente|current account
+il libretto di risparmio|savings account
+l'interesse (m)|interest
+il numero di conto|account number
+il tasso di cambio|exchange rate
+prendere in prestito|to borrow
+l'estratto conto (m)|bank statement
+la cassetta di sicurezza|safety deposit box
+ripagare|to repay
+il saldo bancario|bank balance
+la posta ordinaria|second-class
+il corriere|courier
+la posta prioritaria|first-class
+il furgone della posta|postal van
+la posta|mail
+la buca delle lettere|postbox
+la lettera|letter
+la posta aerea|airmail
+il pacco|package
+imbucare|to post
+la busta imbottita|padded envelope
+l'impiegato postale (m) / l'impiegata postale (f)|postal worker
+gli uffici|office block
+il bar|café
+il parco giochi|playground
+il commissariato|police station
+il centro conferenze|conference centre
+la sinagoga|synagogue
+il tribunale|courthouse
+la moschea|mosque
+la caserma dei vigili del fuoco|fire station
+`,
+"Places":`ospedale|hospital
+cinema|cinema, movie theater
+supermercato|supermarket
+aeroporto|airport
+scuola|school
+discoteca|club, nightclub
+ufficio postale|post office
+albergo|hotel
+commissariato di polizia|police station
+teatro|theater, theatre
+ristorante|restaurant
+distributore di benzina|gas station, petrol station
+mercatino|market
+banca|bank
+libreria|bookshop, bookstore
+museo|museum
+chiesa|church
+parcheggio|parking lot, car park
+stadio|stadium
+cattedrale|cathedral
+municipio|city hall, town hall
+negozio|store, shop
+biglietteria|ticket office
+stazione ferroviaria|train station, railway station
+stazione degli autobus|bus station
+fermata dell'autobus|bus stop
+il cantiere|construction site
+la fabbrica|factory
+l'ufficio (m)|office
+il governo|government
+`,
+"Transport":`macchina|car
+motocicletta|motorcycle
+motorino|moped
+bicicletta|bicycle, bike
+autobus|bus
+treno|train
+barca|boat
+traghetto|ferry
+nave|ship
+aereo|airplane, plane
+l'elicottero (m)|helicopter
+il rotore|rotor
+la pala|blade
+la cabina di pilotaggio|cockpit
+la prua|nose
+la coda|tail
+ritornare|to return
+il trasporto pubblico|public transport
+attraversare|to cross
+il taxi|taxi
+il pendolare|commuter
+la stazione dei taxi|taxi rank
+fare il pendolare|to commute
+la segnaletica stradale|road sign
+il passeggero|passenger
+prendere un taxi|to take a taxi
+il pedone|pedestrian
+le direzioni stradali|directions
+la mappa|map
+l'itinerario (m)|route
+il biglietto|ticket
+l'ingorgo stradale (m)|traffic jam
+l'orario (m)|timetable
+l'ora di punta (f)|rush hour
+il seggiolino per bambini|child seat
+il sedile passeggero|passenger seat
+il monovolume|people carrier
+il posto di guida|driver's seat
+il caravan|caravan
+il portapacchi|roof rack
+il sedile posteriore|back seat
+il camper|motorhome
+l'etilometro (m)|Breathalyser®
+l'aria condizionata (f)|air conditioning
+il tettuccio apribile|sunroof
+accendere il motore|to start the engine
+la frizione|clutch
+la (macchina) automatica|automatic (car)
+frenare|to brake
+la regolazione automatica della velocità|cruise control
+la (macchina) elettrica|electric (car)
+sorpassare|to overtake
+il tubo di scappamento|exhaust (pipe)
+la (macchina) ibrida|hybrid (car)
+parcheggiare|to park
+il motore|engine
+fare retromarcia|to reverse
+il serbatoio del carburante|fuel tank
+la batteria|battery
+rallentare|to slow down
+il cambio|gearbox
+i freni|brake
+accelerare|to speed up
+la trasmissione|transmission
+l'acceleratore (m)|accelerator
+lo specchietto laterale|wing mirror
+l'ala (f)|wing
+il portabagagli|boot
+il pneumatico|tyre
+il tettuccio|roof
+il fanale anteriore|headlight
+il cofano|bonnet
+il finestrino|window
+il paraurti|bumper
+il tergicristallo|windscreen wiper
+la ruota|wheel
+il numero di targa|number plate
+il parabrezza|windscreen
+la portiera|door
+la freccia|indicator
+il navigatore|sat nav
+il freno a mano|handbrake
+il cruscotto|dashboard
+la cintura di sicurezza|seatbelt
+il poggiatesta|headrest
+l'indicatore del carburante (m)|fuel gauge
+l'accensione (f)|ignition
+il tachimetro|speedometer
+lo specchietto retrovisore|rearview mirror
+il volante|steering wheel
+il vano portaoggetti|glove compartment
+i lavori stradali|roadworks
+la patente|driving licence
+la strada a una sola corsia|single-track road
+il parcheggio accessibile|accessible parking space
+il documento di immatricolazione della macchina|car registration document
+la curva|corner
+l'assicurazione stradale (f)|car insurance
+la rampa d'accesso|slip road
+l'autolavaggio (m)|car wash
+la piazzola di sosta|layby
+l'autonoleggio (m)|car hire/rental
+la pompa di benzina|fuel pump
+il limite di velocità|speed limit
+la benzina senza piombo|unleaded petrol
+il bivio|junction
+la deviazione stradale|diversion
+il diesel|diesel
+il cono di traffico|traffic cone
+il benzinaio|petrol station
+il cordolo|kerb
+la buca|pothole
+la corsia|lane
+l'ausiliare del traffico (m/f)|traffic warden
+il passaggio a livello|level crossing
+la rotonda|roundabout
+l'autostrada (f)|motorway
+il tunnel|tunnel
+l'autovelox (m)|speed camera
+il parchimetro|parking meter
+le strisce pedonali|zebra crossing
+il casello autostradale|toll point
+il telefono d'emergenza|emergency phone
+avere una ruota bucata|to have a flat tyre
+l'incidente (m)|accident
+il guasto|breakdown
+l'autofficina (f)|garage
+cambiare la ruota|to change a tyre
+la collisione|collision
+il giubbotto ad alta visibilità|hi-viz vest
+trascinare a rimorchio|to tow
+la ruota bucata|flat tyre
+il martinetto|jack
+l'airbag (m)|airbag
+avere un guasto|to break down
+i cavi di avviamento|jump leads
+l'antigelo (m)|antifreeze
+avere un incidente|to have an accident
+la ruota di scorta|spare wheel
+il triangolo di segnalazione|warning triangle
+le catene da neve|snow chains
+il carro attrezzi|tow truck
+prendere l'autobus|to catch the bus
+il biglietto a prezzo pieno / a metà prezzo|full/half fare
+l'itinerario degli autobus (m)|bus route
+il biglietto agevolato|concession
+la corsia preferenziale|bus lane
+l'accesso per sedia a rotelle (m)|wheelchair access
+il pullman|coach
+l'autobus navetta (m)|shuttle bus
+il minibus|minibus
+lo scuolabus|school bus
+l'abbonamento dell'autobus (m)|bus pass
+il tram|tram
+l'autobus turistico (m)|tour bus
+il filobus|trolley bus
+la tariffa|fare
+i pantaloncini da ciclismo|cycling shorts
+la rastrelliera per bici|bike rack
+la mountain bike|mountain bike
+bucare|to get a puncture
+la bicicletta da strada|road bike
+pedalare|to cycle
+la pista ciclabile|cycle lane
+andare a fare un giro in bicicletta|to go for a bike ride
+il kit di riparazione per le forature|puncture repair kit
+il cavalletto|bike stand
+il campanello|bell
+la luce anteriore|front light
+la pompa per bicicletta|pump
+il lucchetto per bici|bike lock
+il casco|helmet
+il catarifrangente|reflector
+la catena|chain
+il sellino|saddle
+il freno|brake
+il telaio|frame
+il manubrio|handlebars
+il pedale|pedal
+le marce|gears
+il tubo orizzontale|crossbar
+il casco protettivo|crash helmet
+la videocamera da casco|helmet cam
+il parafango|mudguard
+lo scooter|scooter
+i guanti di pelle|leather gloves
+la giacca di pelle|leather jacket
+la moto|motorbike
+il biglietto di andata e ritorno|return ticket
+la linea|line
+la rete ferroviaria|rail network
+la stazione di metropolitana|metro station
+il treno ad alta velocità|high-speed train
+il biglietto elettronico|e-ticket
+il deposito bagagli|left luggage
+il treno passeggeri|passenger train
+di prima classe|first-class
+l'abbonamento ferroviario (m)|railcard
+il treno merci|freight train
+la carrozza silenziosa|quiet coach
+il vagone letto|sleeper
+il posto prenotato|seat reservation
+il biglietto di sola andata|single ticket
+il tornello|ticket barrier
+il ripiano portabagagli|luggage rack
+cambiare treno|to change trains
+la biglietteria automatica|ticket machine
+la metropolitana|metro
+obliterare un biglietto|to validate a ticket
+il binario|platform
+la carrozza|carriage
+il facchino|porter
+la cuccetta|couchette
+il vagone ristorante|restaurant car
+il tabellone delle partenze|departure board
+il carrello|refreshments trolley
+la guardia|guard
+la cabina di manovra|signal box
+l'obliteratrice (f)|validation machine
+la metropolitana leggera|light railway
+le porte scorrevoli|sliding doors
+la locomotiva|locomotive
+gli arrivi / le partenze|Arrivals/Departures
+l'aeroplano (m)|aeroplane
+la linea aerea|airline
+il controllo di sicurezza|security
+il terminal|terminal
+la fusoliera|fuselage
+il bagaglio in eccesso|excess baggage
+il controllo passaporti|passport control
+il bagaglio a mano|hand/cabin baggage
+la dogana|customs
+la coincidenza|connecting flight
+l'equipaggio (m)|cabin crew
+il duty free|duty-free shop
+il jetlag|jetlag
+la business class|business class
+la borsa da viaggio|holdall
+effettuare il check- in (online)|to check in (online)
+l'economy class (f)|economy class
+il carrello portabagagli|luggage trolley
+il corridoio|aisle
+il passaporto|passport
+il tavolino|tray table
+il pilota / la pilota|pilot
+la cappelliera|overhead locker
+il ritiro bagagli|baggage reclaim
+la pista|runway
+la carta d'imbarco|boarding card
+la valigia|suitcase
+la stiva|hold
+la cabina|cabin
+il bagaglio che ha passato il controllo di sicurezza|hold luggage
+il check-in|check-in desk
+la guardia costiera|coastguard
+la traversata in traghetto|ferry crossing
+il capitano|captain
+l'oblò (m)|porthole
+il terminal dei traghetti|ferry terminal
+il fumaiolo|funnel
+il ponte garage|car deck
+salire a bordo di|to board
+il pontile|pier
+navigare|to sail
+il porto|port
+la scialuppa di salvataggio|lifeboat
+entrare in porto|to dock
+il canale|canal
+la chiusa|lock
+la poppa|stern
+il giubbotto di salvataggio|lifejacket
+l'ancora (f)|anchor
+il molo|jetty
+la boa|buoy
+il porticciolo|marina
+il salvagente|lifebuoy
+la passerella|gangway
+l'ormeggio (m)|mooring
+la barca a remi|rowing boat
+il canotto|inflatable dinghy
+la chiatta|canal boat
+la barca a vela|sailing boat
+il kayak|kayak
+lo yacht|yacht
+il transatlantico|liner
+`,
+"Directions":`lontano|far
+vicino|near, close
+qui|here
+accanto a|next to
+davanti a|in front of
+dietro|behind
+di fronte a|opposite
+attorno|around
+a sinistra|on the left, left
+a destra|on the right, right
+al centro|in the center, in the centre
+all'angolo|on the corner
+sopra|on top of, above
+sotto|under, below
+dentro|inside
+fuori|outside
+dritto|straight, straight on
+dappertutto|everywhere
+da nessuna parte|nowhere
+`,
+"Animals":`cane|dog
+gatto|cat
+cavallo|horse
+asino|donkey
+agnello|lamb
+pecora|sheep
+mucca|cow
+vitello|calf, veal
+maiale|pig, pork
+coniglio|rabbit
+uccello|bird
+anatra|duck
+gallina|hen
+gallo|rooster
+oca|goose
+tacchino|turkey
+pulcino|chick
+pesce|fish
+mosca|fly
+zanzara|mosquito
+ape|bee
+sopprimere|to put to sleep
+il microchip|microchip
+il collare elisabettiano|E-collar
+il passaporto per animali domestici|pet passport
+l'animale domestico (m)|pet
+il collare antipulci|flea collar
+la quarantena|quarantine
+la pulce|flea
+il trasportino per animali domestici|pet carrier
+andare dal veterinario|to go to the vet
+la zecca|tick
+la vaccinazione antirabbica|rabies vaccination
+il pappagallo|parrot
+il becco|beak
+l'artiglio (m)|claw
+la zampa|paw
+l'animale (m)|animal
+a sangue freddo|cold-blooded
+lo zoccolo|hoof
+a sangue caldo|warm-blooded
+il muso|snout
+abbaiare|to bark
+la criniera|mane
+la specie|species
+fare le fusa|to purr
+ringhiare|to growl
+il paesaggio|scenery
+ruggire|to roar
+il corno|horn
+lo zoo|zoo
+cinguettare|to chirp
+la piuma|feather
+la pelliccia|fur
+ronzare|to buzz
+l'agricoltore (m)|farmer
+l'azienda agricola (f)|farm
+avere un animale domestico|to have a pet
+il granaio|barn
+il puledro|foal
+il gattino|kitten
+il fieno|hay
+portare a spasso il cane|to walk the dog
+il cucciolo|puppy
+la paglia|straw
+il cane guida|guide dog
+allevare|to farm
+il furetto|ferret
+il pappagallino ondulato|budgerigar
+il pony|pony
+il pesciolino rosso|goldfish
+il canarino|canary
+il porcellino d'India|guinea pig
+il ratto|rat
+il criceto|hamster
+il toro|bull
+la capra|goat
+il cane da pastore|sheepdog
+la lettiera|litter tray
+la cuccia|dog basket
+l'acquario (m)|aquarium
+la museruola|muzzle
+la gabbia|hutch
+il cibo per animali domestici|pet food
+la gattaiola|catflap
+il guinzaglio|lead
+la stalla|stable
+il serpente|snake
+l'iguana (f)|iguana
+l'alligatore (m)|alligator
+il rospo|toad
+la lucertola|lizard
+il coccodrillo|crocodile
+la tartaruga|tortoise
+il tritone|newt
+la tartaruga acquatica|turtle
+la salamandra|salamander
+il geco|gecko
+il topo|mouse
+la volpe|fox
+il tasso|badger
+la lontra|otter
+la lepre|hare
+il pipistrello|bat
+lo scoiattolo|squirrel
+il cinghiale|boar
+il lupo|wolf
+la talpa|mole
+il cervo|deer
+il leone|lion
+la giraffa|giraffe
+l'orso (m)|bear
+la scimmia|monkey
+il gorilla|gorilla
+il cammello|camel
+il rinoceronte|rhinoceros
+l'ippopotamo (m)|hippopotamus
+lo scimpanzé|chimpanzee
+la tigre|tiger
+il canguro|kangaroo
+l'elefante (m)|elephant
+il merlo|blackbird
+il corvo|crow
+l'aquila (f)|eagle
+la gru|crane
+la colomba|dove
+il fringuello|finch
+la fratercula|puffin
+lo struzzo|ostrich
+il fenicottero|flamingo
+il pettirosso|robin
+il gufo|owl
+il gabbiano|gull
+il passero|sparrow
+il pavone|peacock
+il falco|hawk
+la cicogna|stork
+il pellicano|pelican
+l'airone (m)|heron
+il cigno|swan
+il pinguino|penguin
+il martin pescatore|kingfisher
+il tordo|thrush
+il piccione|pigeon
+l'allodola (f)|lark
+lo scarafaggio|cockroach
+la formica|ant
+lo sciame|swarm
+il grillo|cricket
+la colonia|colony
+la libellula|dragonfly
+il coleottero|beetle
+la ragnatela|cobweb
+il lombrico|earthworm
+la farfalla|butterfly
+la puntura d'insetto|insect bite
+il bruco|caterpillar
+la cavalletta|grasshopper
+il millepiedi|centipede
+pungere|to sting
+il ragno|spider
+la falena|moth
+la coccinella|ladybird
+la vespa|wasp
+la lumaca|slug
+l'efemera (f)|mayfly
+l'onisco (m)|woodlouse
+la chiocciola|snail
+la medusa|jellyfish
+il corallo|coral
+lo squalo|shark
+l'orca marina (f)|killer whale
+la stella marina|starfish
+la balena|whale
+la foca|seal
+l'anguilla (f)|eel
+`,
+"Kitchen & eating":`forchetta|fork
+cucchiaio|spoon
+coltello|knife
+piatto|plate
+tazza|cup, coffee cup
+bicchiere|glass
+scodella|bowl
+tovaglia|tablecloth
+tovagliolo|napkin
+tovaglioli di carta|paper towels, paper napkins
+frigorifero|refrigerator, fridge
+dispensa|pantry
+pulire il ripiano della cucina|to clean the worktops
+il bollitore|kettle
+il fornello elettrico|electric cooker
+cucinare|to cook
+il fornello a gas|gas cooker
+sistemare la spesa|to put away the groceries
+lavare i piatti|to wash up
+la cappa|cooker hood
+la carta d'alluminio|aluminium foil
+il portapane|bread bin
+la carta da cucina|kitchen roll
+il sacco della spazzatura|bin bag
+la pellicola|clingfilm
+la pattumiera a pedale|pedal bin
+la padella|frying pan
+la macchina da caffè|coffee pot
+la teglia|baking tray
+la grattugia|grater
+lo scolapasta|colander
+la caffettiera|cafetière
+il frullatore|hand mixer
+il cavatappi|corkscrew
+la casseruola|casserole dish
+la mezzaluna|herb chopper
+il tagliere|chopping board
+l'apriscatole (m)|tin opener
+il pelapatate|peeler
+il mestolo|ladle
+il tostapane|toaster
+il mattarello|rolling pin
+lo schiacciapatate|masher
+la frusta|whisk
+la pentola|saucepan
+il recipiente graduato|measuring jug
+il wok|wok
+il colino|sieve
+il cucchiaio di legno|wooden spoon
+la spatola|spatula
+la macchina per la pasta|pasta machine
+il cassetto|drawer
+il frigorifero con congelatore|fridge-freezer
+il lavello|sink
+il ripiano|worktop
+il forno|oven
+le piastrelle|tiles
+il piano cottura|hob
+il rubinetto|tap
+il microonde|microwave
+lo scolapiatti|draining board
+il faretto|spotlight
+apparecchiare|to set the table
+le stoviglie|crockery
+la tavola|dining table
+le posate|cutlery
+la tovaglietta|place mat
+sparecchiare|to clear the table
+la cristalleria|glassware
+il sottobicchiere|coaster
+la salsiera|gravy boat
+il macinapepe|pepper mill
+la saliera|salt cellar
+l'insalatiera (f)|salad bowl
+il piatto da portata|serving dish
+il cucchiaino|teaspoon
+il coltello e la forchetta|knife and fork
+il flute da spumante|champagne flute
+il calice da vino|wine glass
+la tazza e il piattino|cup and saucer
+`,
+"Food":`prosciutto|ham
+pollo|chicken
+bistecca|steak
+salsiccia|sausage
+mela|apple
+arancia|orange
+pera|pear
+fragola|strawberry
+mirtillo|blueberry
+uva|grapes, grape
+limone|lemon
+fico|fig
+ciliegia|cherry
+pomodoro|tomato
+pomodorino|cherry tomato
+cipolla|onion
+carota|carrot
+zucchine|zucchini, courgettes
+patata|potato
+fungo|mushroom
+melanzana|eggplant, aubergine
+peperone|pepper, bell pepper
+insalata|salad
+dolce|dessert
+zuppa|soup
+latte|milk
+succo|juice
+burro|butter
+marmellata|jam
+burro di arachidi|peanut butter
+aglio|garlic
+uovo|egg
+formaggio|cheese
+olio|oil
+aceto|vinegar
+miele|honey
+zucchero|sugar
+sale|salt
+pepe|pepper, black pepper
+pane|bread
+farina|flour
+riso|rice
+cereali|cereal
+frutta|fruit
+verdura|vegetables, vegetable
+biologico|organic
+stagionale|seasonal
+casereccio|home-made
+maturo|ripe
+lo spicchio|segment
+il fruttivendolo|grocer
+acerbo|unripe
+la buccia|skin
+sminuzzare|to chop
+il nocciolo|stone
+la foglia|leaf
+tagliare a dadini|to dice
+crudo|raw
+grattugiare|to grate
+il seme|pip
+spremere|to juice
+marcio|rotten
+la scorza|rind
+sbucciare|to peel
+senza semi|seedless
+il pompelmo|grapefruit
+il kiwi|kiwi fruit
+l'albicocca (f)|apricot
+il mango|mango
+la mora|blackberry
+il lampone|raspberry
+la pesca|peach
+il melone|melon
+il ribes rosso|redcurrant
+la pescanoce|nectarine
+l'ananas (m)|pineapple
+l'anguria (f)|watermelon
+la susina|plum
+il frutto della passione|passion fruit
+il sedano|celery
+il carciofo|artichoke
+i piselli|peas
+il peperoncino|chilli
+l'asparago (m)|asparagus
+la zucchina|courgette
+il radicchio|radicchio
+il cetriolo|cucumber
+le fave|broad beans
+il peperone rosso|red pepper
+il broccolo|broccoli
+gli spinaci|spinach
+i fagiolini|green beans
+il cavolo|cabbage
+la zucca|squash
+il porro|leek
+il cavolfiore|cauliflower
+di allevamento|farmed
+le squame|scales
+il pescivendolo|fishmonger
+selvatico|wild
+il crostaceo|shellfish
+la lisca|(fish)bone
+salato|salted
+il guscio|shell
+il filetto|fillet
+affumicato|smoked
+d'acqua dolce|freshwater
+fatto a filetti|filleted
+spinato|deboned
+di mare|saltwater
+le uova di pesce|roe
+la spigola|sea bass
+lo sgombro|mackerel
+l'acciuga (f)|anchovy
+l'orata (f)|sea bream
+il salmone|salmon
+il merluzzo|cod
+la trota|trout
+la baccalà|salt cod
+l'aringa (f)|herring
+il tonno|tuna
+la sardina|sardine
+la sogliola|lemon sole
+l'ostrica (f)|oyster
+l'aragosta (f)|lobster
+la vongola|clam
+il gambero|prawn
+la cozza|mussel
+il granchio|crab
+la capasanta|scallop
+il polipo|octopus
+il gambero d'acqua dolce|crayfish
+il riccio|sea urchin
+il gamberetto|shrimp
+il calamaro|squid
+il petto di pollo|chicken breast
+il macellaio|butcher
+la costoletta|chop
+la cacciagione|game
+la carne|meat
+il salame|(cured) sausage
+la carne di vitello|veal
+la carne rossa|red meat
+la carne di cervo|venison
+la carne bianca|white meat
+la porchetta|hog roast
+le frattaglie|offal
+gli affettati|cold meats
+il tocco di carne|joint
+cucinato|cooked
+il manzo|beef
+la carne tritata|mince
+la mortadella|mortadella
+arrostito|roasted
+la pancetta|pancetta
+il pollame|poultry
+ruspante|free-range
+l'hamburger (m)|beefburger
+il cornetto alla crema|custard-filled croissant
+cuocere al forno|to bake
+il fornaio|baker
+i biscotti di mandorle|almond biscuits
+la bomba|doughnut
+il pane integrale|wholemeal bread
+il bignè|éclair
+gli amaretti|amaretti biscuits
+la pagnotta|loaf
+la focaccia|focaccia
+i panini|bread rolls
+la fetta|slice
+la crostata|lattice-top pie
+la torta|cake
+la crosta|crust
+il panettone|panettone
+la ciabatta|ciabatta
+il cornetto|croissant
+senza glutine|gluten-free
+il formaggio di mucca|cow's-milk cheese
+il formaggio affumicato|smoked cheese
+il formaggio erborinato|blue cheese
+il formaggio spalmabile|cream cheese
+il formaggio a pasta dura|hard cheese
+il formaggio di pecora|sheep's-milk cheese
+il pecorino|pecorino
+il formaggio di capra|goat's cheese
+la burrata|burrata
+il provolone|provolone
+il gorgonzola|gorgonzola
+il caciocavallo|caciocavallo
+la ricotta|ricotta
+il mascarpone|mascarpone
+la caciotta|caciotta
+la scamorza|scamorza
+la mozzarella|mozzarella
+l'emmental (m)|Emmenthal
+il taleggio|taleggio
+il parmigiano|Parmesan
+la fontina|fontina
+la panna intera|double cream
+l'albume (m)|egg white
+la panna|cream
+la panna semigrassa|single cream
+il tuorlo|egg yolk
+le uova|eggs
+pastorizzato|pasteurized
+il latte a lunga conservazione|UHT milk
+la margarina|margarine
+non pastorizzato|unpasteurized
+il latte intero|whole milk
+di gallina ruspante|free-range
+il latte parzialmente scremato|semi-skimmed milk
+lo yogurt|yoghurt
+senza lattosio|dairy-free
+il latte scremato|skimmed milk
+il caffè e latte|coffee with milk
+l'ansa (f)|handle
+il piattino|saucer
+pane con burro|bread and butter
+fare colazione|to have breakfast
+saltare la colazione|to skip breakfast
+il cappuccino|cappuccino
+l'espresso (m)|espresso
+il succo d'arancia|orange juice
+il caffè|coffee
+la cioccolata calda|hot chocolate
+il tè|tea
+la macedonia|fruit salad
+la cioccolata da spalmare|chocolate spread
+la fetta biscottata|crispbread
+il muesli|muesli
+il pranzo|lunch
+l'aperitivo (m)|aperitif
+la cena|dinner
+mangiare fuori|to eat out
+il digestivo|after-dinner drink
+le portate|courses
+gli affettati e formaggi misti|assorted cold meats and cheeses
+gli arancini|deep-fried rice balls
+il piatto misto di mare|mixed seafood
+i fiori di zucca in pastella|fried courgette flowers
+il salmone affumicato|smoked salmon
+la vellutata|cream soup
+la zuppa di pesce|fish soup
+le lasagne|lasagne
+il risotto|risotto
+i tortellini|tortellini
+il vitello tonnato|sliced veal in tuna sauce
+la costoletta di maiale|pork cutlet
+l'orata alla griglia (f)|grilled sea bream
+le polpette al sugo|meatballs in tomato sauce
+il pollo al forno|roast chicken
+il saltinbocca|veal wrapped in Parma ham and sage
+la fettina di manzo|sliced beef
+il rollè (m)|meat roulade
+le patate arrosto|roast potatoes
+la cicoria ripassata in padella|stir-fried chicory
+gli spinaci all'agro|spinach with lemon and olive oil
+l'insalata verde (f)|green salad
+l'insalata mista (f)|mixed salad
+il semifreddo|parfait
+la crostatina alla frutta|fruit tart
+la torta di mele|apple cake
+i profiteroles|profiteroles
+la mousse al cioccolato|chocolate mousse
+il gelato|ice cream
+il tiramisù|tiramisu
+la panna cotta|pannacotta
+la torta della nonna|custard tart with pine nuts
+il menù fisso|set menu
+vegetariano|vegetarian
+prenotare un tavolo|to reserve a table
+le specialità del giorno|daily specials
+vegetaliano|vegan
+chiedere il conto|to ask for the bill
+il coperto|service charge
+essere servito|to be served
+la mancia|tip
+il tavolo|table
+il coltello da pesce|fish knife
+la caraffa d'acqua|jug of water
+il conto|bill
+gli stuzzicadenti|toothpicks
+il menù|menu
+il cestino del pane|bread basket
+l'aceto e l'olio (m)|vinegar and oil
+il sale e il pepe|salt and pepper
+il coltello da carne|steak knife
+il coltello da formaggio|cheese knife
+il piatto piano|dinner plate
+il bicchiere da vino bianco|white wine glass
+il coltello da burro|butter knife
+il cucchiaio da minestra|soup spoon
+la forchetta da dolce|dessert fork
+il cucchiaio da dolce|dessert spoon
+il bicchiere da vino rosso|red wine glass
+il piatto fondo|soup bowl
+il bicchiere per l'acqua|water glass
+l'hot dog (m)|hot dog
+l'addetto alle consegne (m) / l'addetta alle consegne (f)|delivery man/woman
+la catena di fast food|fast-food chain
+l'omelette (f)|omelette
+il banco|food stall
+le crêpes|pancakes
+il panino|panini
+prendere un'ordinazione|to collect an order
+il drive-in|drive-thru
+la pizza|pizza
+ordinare per telefono|to phone in an order
+un ordine a portar via|an order to go/ a takeaway
+il sushi|sushi
+il toast|toasted sandwich
+le spese di spedizione|delivery charge
+ricaricare il telefono|to charge your phone
+lo schermo tattile|touchscreen
+il mouse|mouse
+il monitor|screen
+il tappetino mouse|mouse mat
+il tasto|button
+cliccare su|to click on
+l'applicazione (f)|app
+il caricabatterie|charger
+il cavo|cable
+i dati|data
+il computer|computer
+fare una telefonata|to make a phone call
+il (telefono) cellulare|mobile phone
+la SIM|SIM card
+lasciare un messaggio in segreteria|to leave a voice mail
+il telefono fisso|landline
+lo smartphone|smartphone
+la telefonata|phone call
+il tablet|tablet
+postare|to post (online)
+il messaggio SMS|text message
+il router senza fili|wireless router
+scaricare / caricare|to download/upload
+il segnale telefonico|phone signal
+`,
+"Adjectives":`moderno|modern
+antico|old, ancient, antique
+nuovo|new
+vecchio|old
+aperto|open
+chiuso|closed
+acceso|on
+spento|off
+valido|valid
+scaduto|expired
+grande|big, large
+piccolo|small
+occupato|occupied, busy
+libero|free
+caldo|hot, warm
+freddo|cold
+ricco|rich
+povero|poor
+caro|expensive, dear
+economico|cheap, inexpensive
+pieno|full
+vuoto|empty
+comodo|comfortable
+scomodo|uncomfortable
+largo|loose, wide
+stretto|tight, narrow
+facile|easy
+difficile|difficult, hard
+numeroso|numerous
+pochi|few
+utile|useful
+inutile|useless
+colpevole|guilty
+innocente|innocent
+originale|original
+unico|unique
+semplice|simple, plain
+elegante|elegant
+necessario|necessary
+indispensabile|essential, indispensable
+bagnato|wet
+asciutto|dry
+giusto|right, correct
+sbagliato|wrong
+vero|true
+falso|false
+pesante|heavy
+leggero|light
+in anticipo|early
+in ritardo|late
+in orario|on time
+affollato|crowded
+pulito|clean
+sporco|dirty
+veloce|fast, quick
+rapido|fast, rapid
+lento|slow
+lungo|long
+corto|short
+a righe|striped
+a scacchi|checkered
+a pois|polka dotted, polka dot
+in tinta unita|plain
+azzurro|blue
+rosso|red
+giallo|yellow
+verde|green
+bianco|white
+nero|black
+`,
+"Sports":`calcio|soccer, football
+scherma|fencing
+pallacanestro|basketball
+pallavolo|volleyball
+nuoto|swimming
+pallanuoto|water polo
+tuffi|diving
+pattinaggio|skating
+sci|skiing
+sci di fondo|cross-country skiing
+ginnastica|gymnastics
+equitazione|horseback riding, horse riding
+corsa|running, track
+corsa ad ostacoli|hurdling, hurdles
+salto in alto|high jump, high jumping
+salto in lungo|long jump, long jumping
+ciclismo|cycling
+motociclismo|motorcycle racing
+automobilismo|auto racing, motor racing
+vela|sailing
+canottaggio|rowing
+pugilato|boxing
+football americano|american football, football
+il campo da calcio|football pitch
+il cerchio di centrocampo|centre circle
+l'area di rigore (f)|penalty box
+il podio|podium
+i punti|points
+il torneo|tournament
+l'arbitro (m)|referee
+allenare|to coach
+la competizione|competition
+il tabellone segnapunti|scoreboard
+competere|to compete
+la lega|league
+segnare|to score
+il campione / la campionessa|champion
+gli spettatori|spectators
+il concorrente / la concorrente|competitor
+il compagno di squadra / la compagna di squadra|teammate
+pareggiare|to draw
+le tribune|stands
+il centro sportivo|leisure centre
+la squadra sportiva|team
+l'allenatore (m) / l'allenatrice (f)|coach
+la medaglia|medal
+il trofeo|trophy
+il manager|manager
+la partita|match
+il Pilates|Pilates
+la palestra|gym
+fare esercizio|to exercise
+lo yoga|yoga
+l'iscrizione in palestra (m)|gym membership
+mantenersi in forma|to keep fit
+le flessioni|press-ups
+il personal trainer|personal trainer
+andare a correre|to go for a run
+gli addominali|sit-ups
+la lezione di ginnastica|exercise class
+andare in palestra|to go to the gym
+le docce|showers
+la palla da ginnastica|gym ball
+lo spogliatoio|changing room
+la corda|skipping rope
+il kettlebell|kettle bell
+il cross trainer|cross trainer
+il tapis roulant|treadmill
+i manubri|dumbbells
+la panca|weightlifting bench
+il vogatore|rowing machine
+la cyclette|exercise bike
+il pallone da calcio|football
+il rigore|foul
+il difensore|defender
+gli scarpini da calcio|football boots
+il contrasto|tackle
+l'attaccante (m)|striker
+la partita di calcio|football match
+il fuori gioco|offside
+la riserva|substitute
+il calcio di rigore|penalty kick
+il calcio d'inizio|kick-off
+l'intervallo (m)|half-time
+giocare a calcio|to play football
+la fine della partita|full-time
+il portiere|goalkeeper
+calciare|to kick
+i tempi supplementari|extra time
+i guanti da portiere|goalkeeper's gloves
+contrastare|to tackle
+i minuti di recupero|injury time
+i parastinchi|shin pads
+passare la palla|to pass the ball
+il calcio di punizione|free kick
+il fischietto|whistle
+fare gol|to score a goal
+il colpo di testa|header
+il cartellino giallo / rosso|yellow/red card
+il guardalinee|assistant referee
+la parata|save
+il rugby a tredici / quindici|rugby league/union
+il goal di rimbalzo|drop goal
+il rugby|rugby
+il placcaggio|tackle
+il pallone da rugby|rugby ball
+l'avanti (m)|forward
+il passaggio|pass
+il campo di rugby|rugby field
+il tre quarti|back
+giocare a rugby|to play rugby
+i pali di porta|(rugby) goalposts
+la meta|try
+placcare|to tackle
+il rugbista|rugby player
+la trasformazione|conversion
+segnare una meta|to score a try
+la mischia|scrum
+marcare un giocatore|to mark a player
+la pallacanestro in carrozzina|wheelchair basketball
+tirare|to throw
+il canestro|basket
+la schiacciata|slam dunk
+palleggiare|to dribble
+la palla da pallacanestro|basketball
+il tiro libero|free throw
+bloccare|to block
+giocare a pallacanestro|to play basketball
+il campo da pallacanestro|basketball court
+il giocatore di pallacanestro|basketball player
+le scarpe da pallacanestro|basketball shoes
+la partita di pallacanestro|basketball game
+giocare a tennis|to play tennis
+la rete|net
+l'ace (m)|ace
+giocare a badminton|to play badminton
+il palleggio|rally
+il servizio|serve
+il singolo|singles
+il rovescio|backhand
+il doppio|doubles
+strappare il servizio|to break someone's serve
+il numero uno|top seed
+il fallo|fault
+il badminton|badminton
+la racchetta da badminton|badminton racket
+il volano|shuttlecock
+lo squash|squash
+la pallina da squash|squash ball
+la racchetta da squash|squash racket
+la racchetta da tennis|tennis racket
+la pallina da tennis|tennis ball
+il raccattapalle / la raccattapalle|ball boy/girl
+il campo da tennis|tennis court
+il giudice di linea|line judge
+il tennista|tennis player
+la sedia dell'arbitro|umpire's chair
+il tennis|tennis
+il nuotatore / la nuotatrice|swimmer
+tuffarsi|to dive
+la rana|breaststroke
+il tuffatore|diver
+fare surf|to surf
+il dorso|backstroke
+il tuffo|diving
+pagaiare|to paddle
+lo stile libero|front crawl
+remare|to row
+il delfino|butterfly
+pescare|to fish
+il surfista / la surfista|surfer
+la vasca|length
+la lezione di nuoto|swimming lesson
+gli occhialini|goggles
+i braccioli|armbands
+il bagnino / la bagnina|lifeguard
+il trampolino|diving board
+la cuffia|swimming cap
+i remi|oars
+il bodyboard|bodyboarding
+la pagaia|paddle
+andare in canoa|canoeing
+lo sci d'acqua|waterskiing
+il paddle|paddleboarding
+la moto d'acqua|jet ski
+la muta|wetsuit
+l'immersione subacquea (f)|scuba diving
+andare in kayak|kayaking
+il windsurf|windsurfing
+lo snorkelling|snorkelling
+lo sciatore / la sciatrice|skier
+l'impianto di risalita (m)|ski lift
+la lezione di sci|skiing lesson
+il servizio di soccorso alpino|mountain rescue service
+la stazione sciistica|ski resort
+l'istruttore di sci (m) / l'istruttrice di sci (f)|ski instructor
+fare snowboard|to snowboard
+la valanga|avalanche
+il kit di pronto soccorso|first-aid kit
+fare alpinismo|to go mountain climbing
+l'avviso di valanghe (m)|avalanche warning
+andare in slitta|to go sledging
+il moschettone|carabiner clip
+la neve farinosa|powder
+andare a pattinare|to go skating
+sciare (fuori pista)|to ski (off-piste)
+i ramponi|crampons
+i pattini da ghiaccio|ice skates
+la piccozza da ghiaccio|ice axe
+il pattinaggio su ghiaccio|ice skating
+la slitta|sledge
+la tuta da sci|ski suit
+il casco da sci|ski helmet
+lo snowboard|snowboard
+la giacca da sci|ski jacket
+la salopette|salopettes
+gli scarponi da snowboard|snowboarding boots
+i bastoncini da sci|ski poles
+gli scarponi da sci|ski boots
+i guanti da sci|ski gloves
+la maschera da sci|ski goggles
+dare un pugno|to punch
+il pugno|punch
+la lotta|fight
+dare un calcio|to kick
+il fuori combattimento|knockout
+il pugile|boxer
+il lottatore|fighter
+le arti marziali|martial arts
+allenarsi|to spar
+l'avversario (m)|opponent
+fare il pugilato|to box
+mettere fuori combattimento|to knock out
+il peso piuma|featherweight
+fare wrestling|to wrestle
+il peso massimo|heavyweight
+i guanti da boxe|boxing gloves
+le scarpe da boxe|boxing shoes
+il paradenti|mouthguard
+il ring|boxing ring
+il paratesta|headguard
+il sacco da boxe|punchbag
+il kickboxing|kickboxing
+il wrestling|wrestling
+il tai chi|tai chi
+il taekwondo|taekwondo
+il judo|judo
+il karatè|karate
+gli ostacoli|hurdles
+il decathlon|decathlon
+il corridore|runner
+il giavellotto|javelin
+il colpo di partenza|starter's gun
+la gara|race
+fare atletica|to do athletics
+la maratona|marathon
+il salto con l'asta|pole vault
+lo sprint|sprint
+la staffetta|relay
+gareggiare|to race
+la pista da corsa|running track
+saltare|to jump
+la linea di partenza|start line
+il lancio del peso|shot put
+la linea di arrivo|finish line
+le scarpette chiodate|spikes
+l'atleta (m/f)|athlete
+il disco|discus
+la finale|final
+i blocchi di partenza|starting blocks
+il salto triplo|triple jump
+il cronometro|stopwatch
+l'eptathlon (m)|heptathlon
+lanciare la palla dal tee|to tee off
+il clubhouse|clubhouse
+il giocatore di golf / la giocatrice di golf|golfer
+la buca in uno|hole-in-one
+la borsa da golf|golf bag
+il portabastoni|caddie
+il birdie|birdie
+la pallina da golf|golf ball
+il campo da golf|golf course
+il bogey|bogey
+la golf car|golf buggy
+il fairway|fairway
+l'handicap (m)|handicap
+il bastone da golf|golf club
+il green|green
+il putter|putter
+il bunker|bunker
+giocare a golf|to play golf
+il tee|tee
+la ginnastica artistica|gymnastics
+l'arrampicata (f)|climbing
+il cricket|cricket
+il tiro con l'arco|archery
+la pallamano|handball
+il baseball|baseball
+l'hockey (m)|hockey
+le bocce|bowls
+il ping pong|table tennis
+il netball|netball
+l'ippica (f)|horse racing
+il ciclismo su pista|track cycling
+il tiro al bersaglio|shooting
+l'hockey sul ghiaccio (m)|ice hockey
+il concorso ippico|showjumping
+lo skateboard|skateboarding
+le gare automobilistiche|motor racing
+il sollevamento pesi|weightlifting
+lo snooker|snooker
+`,
+"Sports equipment":`pattini|skates
+gli sci|the skis, skis
+canoa|canoe
+tavola da surf|surfboard, board
+fioretto|foil
+spada|sword
+piscina|pool, swimming pool
+racchetta|racket
+pallone|ball
+pallina|little ball, marble
+pesi|weights
+guantoni|boxing gloves
+`,
+"Weather":`pioggia|rain
+piove|it is raining, it's raining
+neve|snow
+nevica|it is snowing, it's snowing
+vento|wind
+c'è il vento|it's windy, it is windy
+nuvola|cloud
+nuvoloso|cloudy
+nebbia|fog
+c'è la nebbia|it's foggy, it is foggy
+grandine|hail
+sereno|fine, clear
+tempestoso|stormy
+fa bel tempo|it's nice, the weather is nice
+fa brutto tempo|the weather is bad, it's bad weather
+umido|humid
+afoso|muggy
+fa caldo|it's hot, it is hot
+fa freddo|it's cold, it is cold
+si gela|it's freezing, it is freezing
+tuono|thunder
+fulmine|lightning
+buio|dark
+temporale|storm, thunderstorm
+variabile|changeable
+C'è il sole.|It's sunny.
+Che tempo fa?|How's the weather?
+È nuvoloso.|It's cloudy.
+tiepido|warm
+C'è foschia.|It's misty.
+fresco|cool
+C'è il gelo.|It's freezing.
+Sta per piovere?|Is it going to rain?
+C'è la bufera.|It's stormy.
+Che bella giornata!|What a lovely day!
+mite|mild
+È mutevole.|It's changeable.
+Che brutto tempo!|What awful weather!
+la temperatura|temperature
+il vento forte|gale
+la foschia|mist
+il ghiaccio|ice
+`,
+"Body":`testa|head
+faccia|face
+orecchio|ear
+naso|nose
+bocca|mouth
+occhio|eye
+braccio|arm
+gamba|leg
+mano|hand
+piede|foot
+petto|chest
+stomaco|stomach
+denti|teeth
+dito|finger, toe
+schiena|back
+ginocchio|knee
+collo|neck
+gola|throat
+sano|healthy
+il soccorritore / la soccorritrice|first aider
+stare male|to be unwell
+il dolore|pain
+la malattia|illness
+occuparsi di|to look after
+il paramedico|paramedic
+la sanità mentale|mental health
+curare|to treat
+il paziente / la paziente|patient
+la terapia|treatment
+la guarigione|recovery
+l'assicurazione sanitaria (f)|health insurance
+la farmacia|pharmacy
+la palpebra|eyelid
+il seno|breast
+il lobo dell'orecchio|earlobe
+la ciglia|eyelash
+l'ascella (f)|armpit
+le narici|nostrils
+il sopracciglio|eyebrow
+i genitali|genitals
+odorare|to smell
+l'udito (m)|sense of hearing
+le labbra|lips
+la vista|sense of sight
+la lingua|tongue
+toccare|to touch
+l'olfatto (m)|sense of smell
+assaggiare|to taste
+il gusto|sense of taste
+i peli|(body) hair
+stare in piedi|to stand
+il tatto|sense of touch
+l'altezza (f)|height
+l'equilibrio (m)|balance
+il peso|weight
+perdere l'equilibrio|to lose one's balance
+l'indice di massa corporea (m)|BMI
+i capelli|hair
+la mascella|jaw
+la guancia|cheek
+la fronte|forehead
+il mento|chin
+il polso|wrist
+l'unghia (f)|fingernail
+il pollice|thumb
+la nocca|knuckle
+il palmo|palm
+l'alluce (m)|big toe
+il dito del piede|toe
+il tallone|heel
+l'unghia del piede (f)|toenail
+la caviglia|ankle
+il torace|chest
+il viso|face
+la tibia|shin
+l'addome (m)|abdomen
+la coscia|thigh
+la spalla|shoulder
+le natiche|buttocks
+il gomito|elbow
+l'anca (f)|hip
+il polpaccio|calf
+l'organo (m)|organ
+il cuore|heart
+il fegato|liver
+il cervello|brain
+il polmone|lung
+il sangue|blood
+il rene|kidney
+la cellula|cell
+l'articolazione (f)|joint
+l'intestino (m)|intestines
+l'arteria (f)|artery
+l'osso (m)|bone
+l'apparato digerente (m)|digestive system
+la vena|vein
+il muscolo|muscle
+l'apparato respiratorio (m)|respiratory system
+l'ossigeno (m)|oxygen
+il tendine|tendon
+la vescica|bladder
+il legamento|ligament
+il femore|femur
+le costole|ribs
+il cranio|skull
+la rotula|kneecap
+la spina dorsale|spine
+la clavicola|collarbone
+il perone|fibula
+l'ulna (f)|ulna
+le vertebre|vertebrae
+l'omero (m)|humerus
+il bacino|pelvis
+lo sterno|breastbone
+`,
+"Health & feelings":`mal di denti|toothache
+mal d'orecchi|earache
+mal di testa|headache
+mal di stomaco|stomachache
+mi fa male la gola|i have a sore throat
+mi sento meglio|i feel better
+mi sento peggio|i feel worse
+ho il capogiro|i feel dizzy, i am dizzy
+ho la nausea|i feel nauseous, i feel sick
+ho i brividi|i feel shivery, i have the shivers
+un raffreddore|a cold
+la tosse|a cough, cough
+la febbre|a fever, fever
+un'emicrania|a migraine, migraine
+l'influenza|the flu, flu
+ho freddo|i am cold, i'm cold
+ho caldo|i am hot, i'm hot
+ho sete|i am thirsty, i'm thirsty
+ho fame|i am hungry, i'm hungry
+ho sonno|i am sleepy, i'm sleepy
+sono malato|i am sick, i'm sick, i am ill
+sono arrabbiato|i am angry, i'm angry
+sono ansioso|i am anxious, i'm anxious
+sono depresso|i am depressed, i'm depressed
+sono stanco|i am tired, i'm tired
+Come stanno?|How are they?
+Bene, grazie.|Fine, thanks.
+Come sta?|How are you?
+Bene grazie. Lei?|Very well, thanks, and you?
+Benissimo!|Great!
+Come va?|How's it going?
+Così e così.|So-so.
+spaventato|afraid
+Non male, grazie.|Not bad, thanks.
+annoiato|bored
+felice|happy
+Potrebbe andare peggio.|Could be worse.
+emozionato|excited
+Sto bene.|I'm fine.
+sorpreso|surprised
+bene|well
+irritato|annoyed
+Sono pieno.|I'm full.
+malato|unwell
+arrabbiato|angry
+meglio|better
+peggio|worse
+preoccupato|worried
+l'antistaminico (m)|antihistamine
+la febbre da fieno|hay fever
+il farmacista|pharmacist
+l'antisettico (m)|antiseptic
+l'asma (f)|asthma
+la ricetta|prescription
+il decongestionante|decongestant
+l'antidolorifico (m)|painkiller
+il mal di gola / stomaco|sore throat/stomach
+la diarrea|diarrhoea
+la medicina|medicine
+lo sciroppo per la tosse|cough mixture
+la crema antisettica|antiseptic cream
+il cerotto|plaster
+la fasciatura|bandage
+le gocce|drops
+la capsula|capsule
+la pastiglia|tablet/pill
+la losanga|lozenge
+la benda|bandage
+la siringa|syringe
+l'ambulatorio (m)|examination room
+la visita a domicilio|home visit
+l'appuntamento (m)|appointment
+la vaccinazione|vaccination
+la clinica|clinic
+il medico di base|GP
+il medicinale|medication
+l'analisi (f)|examination
+prendere un appuntamento|to make an appointment
+gli antibiotici|antibiotics
+lo stetoscopio|stethoscope
+la pillola|the pill
+prendere medicine|to be on medication
+il sonnifero|sleeping pill
+il termometro|thermometer
+il misuratore di pressione sanguigna|blood pressure monitor
+la sala d'attesa|waiting room
+l'otturazione (f)|filling
+l'incisivo (m)|incisor
+il controllo dei denti|dental check-up
+la corona dentale|crown
+il canino|canine
+l'igienista (m/f)|hygienist
+la cura canalare|root canal treatment
+i denti del giudizio|wisdom teeth
+il molare|molar
+la dentiera|dentures
+il filo interdentale|dental floss
+le gengive|gums
+l'assistente dentale (m/f)|dental nurse
+l'ascesso (m)|abscess
+l'estrazione (f)|extraction
+il lettino da dentista|dentist's chair
+usare il filo interdentale|to floss
+il trapano da dentista|dentist's drill
+l'apparecchio (m)|braces
+ipovedente|visually impaired
+la congiuntivite|conjunctivitis
+l'oftalmologo (m)|ophthalmologist
+non vedente|blind
+l'orzaiolo (m)|stye
+gli occhiali da lettura|reading glasses
+daltonico|colour-blind
+la vista sfocata|blurred vision
+i bifocali|bifocals
+portare gli occhiali|to wear glasses
+la cataratta|cataract
+le lenti a contatto rigide / morbide|hard/soft contact lenses
+portare le lenti a contatto|to wear contacts
+miope|short-sighted
+presbite|long-sighted
+le lenti a contatto|contact lenses
+gli occhiali|glasses
+il contenitore per le lenti a contatto|contact lens case
+il collirio|eye drops
+la custodia per gli occhiali|glasses case
+l'esame della vista (m)|eye test
+la tabella di misurazione della vista|eye chart
+la montatura|frames
+la flebo|drip
+il defibrillatore|defibrillator
+l'ospedale pubblico (m)|public hospital
+il letto d'ospedale|hospital bed
+la diagnosi|diagnosis
+l'ospedale privato (m)|private hospital
+il carrello ospedaliero|hospital trolley
+sottoporsi a un intervento chirurgico|to undergo surgery
+il fisioterapista / la fisioterapista|physiotherapist
+essere ricoverato in ospedale|to be admitted
+il radiografo / la radiografa|radiographer
+la sala operatoria|operating theatre
+essere dimesso dall'ospedale|to be discharged
+il chirurgo|surgeon
+la maschera d'ossigeno|oxygen mask
+l'operazione (f)|operation
+il pronto soccorso|A&E
+l'ingessatura (f)|plaster cast
+l'ecografia (f)|scan
+l'ambulanza (f)|ambulance
+la terapia intensiva|intensive care
+le stampelle|crutches
+la radiografia|X-ray
+il deambulatore|Zimmer frame®
+la sedia a rotelle|wheelchair
+essere svenuto|to be unconscious
+la cicatrice|scar
+farsi male|to injure oneself
+il colpo di frusta|whiplash
+la commozione cerebrale|concussion
+il gonfiore|swelling
+rompersi il braccio|to break one's arm
+la caduta|fall
+slogarsi la caviglia|to twist one's ankle
+la posizione di sicurezza|recovery position
+la lussazione|dislocation
+sentire il polso|to take his/her pulse
+la rianimazione|CPR
+la slogatura|sprain
+la scheggia|splinter
+il taglio|cut
+la puntura|sting
+la frattura|fracture
+il livido|bruise
+la scottatura|sunburn
+l'escoriazione (f)|graze
+la bruciatura|burn
+la borsa del ghiaccio|ice pack
+la fascia|sling
+il collare|neck brace
+le pinzette|tweezers
+la pomata|ointment
+la garza|dressing
+l'inalatore (m)|inhaler
+l'intossicazione alimentare (f)|food poisoning
+l'attacco cardiaco (m)|heart attack
+l'insulina (f)|insulin
+l'ictus (m)|stroke
+il vomito|vomiting
+i dolori mestruali|period pain
+l'infezione (f)|infection
+la nausea|nausea
+avere la pressione alta / bassa|to have high/low blood pressure
+l'otite (f)|ear infection
+la stitichezza|constipation
+il virus|virus
+il diabete|diabetes
+starnutire|to sneeze
+la varicella|chicken pox
+l'epilessia (f)|epilepsy
+vomitare|to vomit
+l'eruzione cutanea (f)|rash
+svenire|to faint
+il virus intestinale|stomach bug
+le vertigini|dizziness
+la coperta per bambini|baby blanket
+l'aborto spontaneo (m)|miscarriage
+la donna incinta|pregnant woman
+il neonato|newborn
+nato morto|stillborn
+il feto|foetus
+l'incubatrice (f)|incubator
+la data del parto|due date
+l'utero (m)|uterus
+la sala parto|labour suite
+la nausea mattutina|morning sickness
+la cervice|cervix
+l'ostetrica (f)|midwife
+rimanere incinta|to fall pregnant
+il corso preparto|pre-natal class
+essere oltre il termine|to be overdue
+il travaglio|labour
+il test di gravidanza|pregnancy test
+avere le doglie|to be in labour
+il parto|delivery
+l'ecografista (m/f)|sonographer
+partorire|to give birth
+il parto cesareo|Caesarean section
+abortire|to miscarry
+l'anestesia epidurale (f)|epidural
+la consapevolezza|mindfulness
+l'agopunturista (m)|acupuncturist
+il terapista|therapist
+il riflessologo / la riflessologa|reflexologist
+il massaggiatore|masseur
+massaggiare|to massage
+la massaggiatrice|masseuse
+il rimedio|remedy
+meditare|to meditate
+il chiropratico / la chiropratica|chiropractor
+il reiki|reiki
+l'olio essenziale (m)|essential oil
+la fitoterapia|herbal medicine
+l'omeopatia (f)|homeopathy
+la talassoterapia|thalassotherapy
+la meditazione|meditation
+l'agopuntura (f)|acupuncture
+la medicina tradizionale cinese|traditional Chinese medicine
+l'osteopatia (f)|osteopathy
+la chiropratica|chiropractic
+la riflessologia|reflexology
+l'ipnoterapia (f)|hypnotherapy
+il massaggio|massage
+`,
+"Days & time":`lunedì|monday
+martedì|tuesday
+mercoledì|wednesday
+giovedì|thursday
+venerdì|friday
+sabato|saturday
+domenica|sunday
+lunedì scorso|last monday
+lunedì prossimo|next monday
+ieri|yesterday
+oggi|today
+domani|tomorrow
+dopodomani|the day after tomorrow
+la mattina|morning
+il pomeriggio|afternoon
+la sera|evening
+la notte|night
+il mezzogiorno|midday
+la mezzanotte|midnight
+Che ora è?|What time is it?
+Sono le nove.|It's nine o'clock.
+stasera|tonight
+presto|soon
+l'altro ieri|the day before yesterday
+più tardi|later
+ora|now
+tardi|late
+il giorno|day
+il mese|month
+bimensile|fortnightly
+il fine settimana|weekend
+l'anno (m)|year
+mensile|monthly
+la settimana|week
+il decennio|decade
+annuale|yearly
+due settimane|fortnight
+giornaliero|daily
+di lunedì|on Mondays
+il trimestre|quarter
+settimanale|weekly
+ogni domenica|every Sunday
+giovedì scorso|last Thursday
+nel 2018|in 2018
+l'autunno (m)|autumn
+venerdì prossimo|next Friday
+negli anni '80|in the '80s
+l'inverno (m)|winter
+la settimana prima / dopo|the week before/after
+la primavera|spring
+in primavera / inverno|in spring/winter
+l'estate (f)|summer
+a febbraio|in February
+`,
+"Months":`gennaio|january
+febbraio|february
+marzo|march
+aprile|april
+maggio|may
+giugno|june
+luglio|july
+agosto|august
+settembre|september
+ottobre|october
+novembre|november
+dicembre|december
+`,
+"Holidays":`Natale|christmas
+Pasqua|easter
+Avvento|advent
+Quaresima|lent
+Capodanno|new year's day, new year
+la Vigilia di Natale|christmas eve
+Ognissanti|all saints' day, all saints day
+Ferragosto|august 15th, 15 august
+il costume|costume
+la maschera|mask
+lo spumante|champagne
+le buone / cattive notizie|good/bad news
+l'occasione (f)|occasion
+i coriandoli|confetti
+il compleanno|birthday
+celebrare|to celebrate
+le decorazioni|decorations
+la festa di compleanno|birthday party
+fare una festa|to throw a party
+i fuochi d'artificio|fireworks
+brindare a|to toast
+la festa nazionale|public holiday
+il regalo|gift
+il mazzo di fiori|bouquet of flowers
+la festività religiosa|religious holiday
+il bigliettino d'auguri|greetings card
+la scatola di cioccolatini|box of chocolates
+la celebrazione|celebration
+l'anniversario di matrimonio (m)|wedding anniversary
+i festoni|bunting
+le stelle filanti|streamers
+la festa a sorpresa|surprise party
+il giorno di Ognissanti|All Saints' Day
+il funerale|funeral
+la nascita|birth
+la Festa della Mamma|Mother's Day
+il battesimo|baptism
+il Diwali|Diwali
+la Festa del Papà|Father's Day
+trovare un lavoro|finding a job
+l'Eid al-Fitr (m)|Eid al-Fitr
+il Halloween|Halloween
+il fidanzamento ufficiale|engagement
+l'Hanukkah (f)|Hanukkah
+il giorno del pesce d'aprile|April Fool's Day
+l'Holi (m)|Holi
+il matrimonio|marriage
+il Primo Maggio|May Day
+il martedì grasso|Mardi Gras
+le nozze|wedding
+il giorno di San Valentino|Valentine's Day
+la Pasqua ebraica|Passover
+avere un bambino|to have a child
+il Ramadan|Ramadan
+il trasferimento|relocation
+superare l'esame di guida|to pass your driving test
+andare in pensione|retirement
+Babbo Natale|Father Christmas/ Santa Claus
+la pallina natalizia|bauble
+la Befana|Befana
+il giorno di Natale|Christmas Day
+il vischio|mistletoe
+il cenone di Natale|Christmas dinner
+il biglietto di Natale|Christmas card
+il presepio|Nativity scene
+le luci di Natale|Christmas lights
+la vigilia di Capodanno|New Year's Eve
+l'orpello (m)|tinsel
+l'albero di Natale (m)|Christmas tree
+la ghirlanda|wreath
+l'Epifania (f)|Epiphany
+il tronchetto di Natale|Yule log
+il biglietto di auguri per Capodanno|New Year's card
+la pittura facciale|face paint
+le castagnole|carnival doughnuts
+la sfilata|parade
+il carro di Carnevale|carnival float
+l'artista di strada (m)|street performer
+il copricapo|headdress
+`,
+"Everyday expressions":`A sabato.|See you on Saturday.
+Buonasera.|Good evening.
+Ciao.|Hello.
+Arrivederci.|Goodbye.
+Buonanotte.|Good night.
+A presto.|See you soon.
+Buona giornata / serata!|Have a good day/ evening!
+A domani.|See you tomorrow.
+Buongiorno.|Good morning/ afternoon.
+Mi dispiace.|I'm sorry.
+Grazie.|Thank you.
+Si.|Yes.
+Va bene!|OK!
+No, grazie.|No, thanks.
+No.|No.
+Prego.|You're welcome.
+Mi scusi.|Excuse me.
+Non lo so.|I don't know.
+Non capisco.|I don't understand.
+Scusi?|Sorry?
+Per favore.|Please.
+Si, grazie.|Yes, please.
+Sono single.|I'm single.
+gallese|Welsh
+Di dov'è?|Where are you from?
+Sono divorziato.|I'm divorced. (man)
+britannico|British
+Dove vive?|Where do you live?
+Sono divorziata.|I'm divorced. (woman)
+È sposato?|Are you married? (to a man)
+Sono vedovo.|I'm widowed. (man)
+È sposata?|Are you married? (to a woman)
+Sono vedova.|I'm widowed. (woman)
+È single?|Are you single?
+Ha figli?|Do you have any children?
+Sono sposato.|I'm married. (man)
+scozzese|Scottish
+Sono sposata.|I'm married. (woman)
+inglese|English
+Non ho figli.|I don't have any children.
+irlandese|Irish
+incontrare gli amici|to meet friends
+andare a casa|to go home
+`,
+"Family & people":`Quanti anni ha?|How old are you?
+Quand'è il suo compleanno?|When is your birthday?
+la moglie|wife
+il compagno / la compagna|partner
+il fidanzato|boyfriend
+la fidanzata|girlfriend
+il marito|husband
+il figlio|son
+la figlia|daughter
+il suocero|father-in-law
+lo zio|uncle
+i genitori|parents
+la suocera|mother-in-law
+la zia|aunt
+il padre|father
+la nuora|daughter-in-law
+il cugino / la cugina|cousin
+la madre|mother
+il genero|son-in-law
+la famiglia allargata|extended family
+il fratello|brother
+il cognato|brother-in-law
+l'amico (m) / l'amica (f)|friend
+la sorella|sister
+la cognata|sister-in-law
+il / la collega|colleague
+il nonno|grandfather
+il patrigno|stepfather
+il bebè|baby
+la nonna|grandmother
+la matrigna|stepmother
+il bambino / la bambina|child
+il nipote|grandson/nephew
+il figliastro|stepson
+l'adolescente (m/f)|teenager
+la figliastra|stepdaughter
+`,
+"Shopping":`la banana|banana
+l'olio vegetale (m)|vegetable oil
+le banconote|banknotes
+il lettore carte di credito|card reader
+il rimborso|refund
+il centro commerciale|shopping centre
+le monete|coins
+contactless|contactless
+la carta di debito / credito|debit/credit card
+il mercato|market
+curiosare|to browse
+il commesso / la commessa|shop assistant
+la busta di carta|paper bag
+acquistare|to buy
+la busta di plastica|plastic bag
+i contanti|cash
+pagare|to pay
+la ricevuta|receipt
+il resto|change
+fare compere (online)|to shop (online)
+la busta riciclabile|reusable shopping bag
+il buono acquisto|gift voucher
+andare a fare shopping|to do the shopping/ go shopping
+la cassa|till point
+il pin|PIN
+la confezione|carton
+le cibarie|groceries
+congelato|frozen
+il vasetto|jar
+ricavato dal latte|dairy
+confezione multipla (f)|multipack
+il negozio di gastronomia|delicatessen
+a basso contenuto di grassi|low-fat
+il pacchetto|packet
+il cibo pronto|ready meal
+il barattolo|tin
+a basso contenuto calorico|low-calorie
+la bottiglia|bottle
+in scatola|tinned
+la scatola|box
+la bilancia|scales
+la maionese|mayonnaise
+il caffè solubile|instant coffee
+i biscotti|biscuits
+i noodles|noodles
+il couscous|couscous
+l'olio di oliva (m)|olive oil
+il ketchup|ketchup
+le erbe aromatiche|herbs
+la pasta|pasta
+la marmellata di agrumi|marmalade
+lo zucchero a velo|icing sugar
+le spezie|spices
+le bustine di tè|teabags
+la cioccolata|chocolate
+la frutta secca|nuts
+i popcorn|popcorn
+le patatine fritte|crisps
+le olive|olives
+le caramelle|sweets
+la birra|beer
+il succo di frutta|fruit juice
+l'acqua liscia / gassata (f)|still/sparkling water
+la bevanda gassata|fizzy drink
+i superalcolici|spirits
+il vino|wine
+il commerciante|trader
+il mercato coperto|indoor market
+i prodotti|produce
+il mercato degli agricoltori|farmer's market
+la produzione tradizionale|traditional production
+locale|local
+la bancarella|stall
+la crema solare|suntan lotion
+l'insettifugo (m)|insect repellent
+il preservativo|condom
+la schiuma da barba|shaving foam
+il rasoio|razor
+l'antitraspirante (m)|antiperspirant
+il bagnoschiuma|shower gel
+l'assorbente (m)|sanitary towel
+il balsamo|conditioner
+lo shampoo|shampoo
+il collutorio|mouthwash
+l'assorbente interno (m)|tampon
+lo spazzolino da denti|toothbrush
+il dentifricio|toothpaste
+il rossetto|lipstick
+il fondotinta|foundation
+il fard|blusher
+il mascara|mascara
+la spazzola per capelli|hairbrush
+il pettine|comb
+lo smalto per le unghie|nail varnish
+l'eye liner (m)|eyeliner
+lo spray per capelli|hairspray
+l'ombretto (m)|eyeshadow
+il burro cacao|lip balm
+sterilizzare|to sterilize
+il gel dentizione|teething gel
+lo sterilizzatore|sterilizer
+mettere i denti|to be teething
+l'eritema da pannolino (f)|nappy rash
+il pannolino usa e getta|disposable nappy
+allattare|to breast-feed
+la colica|colic
+i sacchetti per pannolini|nappy sacks
+la tutina|babygro®/sleepsuit
+le scarpine|bootees
+il pagliaccetto|snowsuit
+il bavaglino|bib
+le muffole|mittens
+la canottiera|vest
+la crema per eritema da pannolino|nappy cream
+il cotton fioc|cotton bud
+gli omogeneizzati|baby food
+l'ovatta (f)|cotton wool
+la crema per bambini|baby lotion
+il biscotto|rusk
+il latte in polvere|formula milk
+il borotalco|talcum powder
+il biberon|baby's bottle
+il pannolino|nappy
+le salviette umidificate|wet wipes
+la borsa per il cambio|changing bag
+la carrozzina|pram
+il ciuccio|dummy
+la vaschetta per il bagnetto|baby bath
+il passeggino|pushchair
+il seggiolone|highchair
+il sedile per bambini|baby seat
+l'anello da dentizione (m)|teething ring
+la giostrina|mobile
+il girello|baby walker
+la culla di vimini|Moses basket
+il lettino da viaggio|travel cot
+il lettino|cot
+la cartoleria|stationery
+il giornale|broadsheet
+i biglietti|tickets
+il giornale scandalistico|tabloid
+la tabaccheria|tobacconist
+il chiosco|kiosk
+la matita|pencil
+il biglietto d'auguri|greetings card
+il libro|book
+la cartolina|postcard
+la rivista|magazine
+il sigaro|cigar
+il libro di enigmistica|puzzle book
+la sigaretta|cigarette
+il gratta e vinci|scratch card
+il libro di fumetti|comic book
+il francobollo|stamp
+il taccuino|notebook
+i dolciumi|confectionery
+il tabacco|tobacco
+la penna|pen
+la busta|envelope
+le calzature|footwear
+i costumi da bagno|swimwear
+i mobili|furniture
+la marca|brand
+la scala mobile|escalator
+gli utensili da cucina|kitchenware
+di marca|designer
+gli articoli in pelle|leather goods
+di lusso|luxury
+la toilette|toilets
+l'illuminazione (f)|lighting
+i saldi|sale
+il bancone|counter
+la biancheria intima|lingerie
+gli accessori|accessories
+il reparto|department
+i tessuti d'arredo|soft furnishings
+i cosmetici|cosmetics
+l'abbigliamento uomo (m)|menswear
+i giocattoli|toys
+la moda|fashion
+l'abbigliamento donna (m)|womenswear
+cibo e bevande|food and drink
+l'abbigliamento sportivo (m)|sportswear
+la sega|saw
+lo scalpello|chisel
+l'utensile (m)|tool
+il cacciavite|screwdriver
+il trapano elettrico|electric drill
+la cassetta degli attrezzi|tool box
+le viti|screws
+il martello|hammer
+l'utensile elettrico (m)|power tool
+il chiave inglese|spanner
+i chiodi|nails
+la livella|spirit level
+i dadi e bulloni|nuts and bolts
+la carpenteria|joinery
+la scala a libretto|stepladder
+la vernice|paint
+il fai da te|home improvements
+le mattonelle|tiles
+il pennello|paintbrush
+l'imbiancatura (f)|painting
+la carta da parati|wallpaper
+il rullo per verniciare|paint roller
+la piombatura|plumbing
+le pinze|pliers
+faire il fai da te|to do DIY
+il negozio di animali|pet shop
+l'agenzia immobiliare (f)|estate agency
+l'antiquariato (m)|antique shop
+il negozio di telefoni|phone shop
+il barbiere|barber's
+il fioraio|florist's
+il negozio di musica|record shop
+il salone di bellezza|beauty salon
+il negozio di mobili|furniture store
+il negozio di scarpe|shoe shop
+il vivaio|garden centre
+la boutique|boutique
+il parrucchiere|hairdresser's
+l'autosalone (m)|car showroom
+il negozio di giocattoli|toyshop
+il negozio di alimenti naturali|health food shop
+la pizzicheria|deli
+l'agenzia viaggi (f)|travel agency
+l'orefice (m)|jeweller's shop
+il negozio di elettronica|electronics store
+l'enoteca (f)|wine shop
+l'ottico (m)|optician's
+`,
+"Communication & IT":`il sito web|website
+l'indirizzo email (m)|email address
+il messaggio|post
+il link|link
+il internet|internet
+i social media|social media
+l'icona (f)|icon
+il wi-fi|WiFi
+l'email (f)|email
+la segreteria telefonica|voice mail
+`,
+"School & education":`gli alloggi per studenti universitari|halls of residence
+la lezione|lecture
+la scuola materna|nursery school
+la scuola elementare|primary school
+la carta di immatricolazione|matriculation card
+l'assegnazione (f)|assignment
+la scuola secondaria di primo e di secondo grado|secondary school
+l'associazione studentesca (f)|student union
+i compiti|homework
+l'esame (m)|exam
+l'università (f)|college
+la laurea|degree
+l'universitario (m) / l'universitaria (f)|undergraduate
+il preside|headteacher
+il postlaureato / la postlaureata|postgraduate
+rivedere|to revise
+il bidello / la bidella|janitor
+la mensa|canteen
+sostenere un esame|to sit an exam
+l'alunno (m) / l'alunna (f)|pupil
+l'aula magna (f)|assembly hall
+laurearsi|to graduate
+la classe|classroom
+il campo da gioco|playing field
+lo zaino|schoolbag
+le matite colorate|colouring pencils
+il temperamatite|sharpener
+la gomma da cancellare|eraser
+il libro di testo|textbook
+l'astuccio (m)|pencil case
+il quaderno|exercise book
+la lavagna bianca|whiteboard
+il righello|ruler
+la carta|paper
+la caffetteria|cafeteria
+l'aula (f)|lecture hall
+la biblioteca|library
+il campus|campus
+il docente|lecturer
+`,
+"Work & office":`la presentazione|presentation
+le risorse umane|human resources
+il direttore / la direttrice|manager
+la relazione|report
+la contabilità|accounts
+il personale|staff
+la riunione|meeting
+le cifre|figures
+il collega / la collega|colleague
+la teleconferenza|conference call
+il foglio elettronico|spreadsheet
+il cliente|client
+la stampante|printer
+la calcolatrice|calculator
+la videoconferenza|video conference
+il raccoglitore ad anelli|ring binder
+la cartuccia d'inchiostro|ink cartridge
+lo scanner|scanner
+la posta in arrivo|inbox
+le forbici|scissors
+lo schedario|filing cabinet
+il file|file
+la spillatrice|stapler
+la cartella|folder
+l'allegato (m)|attachment
+i Post-it®|sticky notes
+la perforatrice|hole punch
+il nome utente|username
+lo scotch®|sticky tape
+la vaschetta porta– corrispondenza|in/out tray
+la password|password
+la sedia girevole|swivel chair
+il portatile|laptop
+connettersi / disconnettersi|to log on/off
+il telefono|telephone
+battere (a macchina)|to type
+la chiavetta USB|USB stick
+la graffetta|paper clip
+fare una presentazione|to give a presentation
+la fotocopiatrice|photocopier
+organizzare una riunione|to hold a meeting
+`,
+"Leisure & holidays":`la corda da campeggio|guy rope
+il telone esterno|flysheet
+il telone impermeabile|groundsheet
+il picchetto da tenda|tent peg
+il jogging|jogging
+passare il tempo|to pass the time
+il tempo libero|spare time
+ascoltare la musica|listening to music
+le attività|activity
+la lettura|reading
+l'hobby (m)|hobby
+fare shopping|shopping
+il passatempo|pastime
+lo sport|sports
+la vacanza|holiday
+il viaggio|travelling
+entusiasta|keen
+giocare ai videogiochi|gaming
+guardare la TV / i film|watching TV/films
+il giardinaggio|gardening
+essere interessato a|to be interested in
+il turista|tourist
+l'escursione (f)|excursion
+il sito storico|historic site
+l'attrazione turistica (f)|tourist attraction
+la riserva naturale|nature reserve
+l'audio-guida (f)|audio guide
+il castello|castle
+la visita guidata|guided tour
+la mappa della città|city map
+la guida turistica|tour guide
+i giardini|gardens
+la galleria d'arte|art gallery
+l'ufficio turistico (m)|tourist office
+la guida|guidebook
+la macchinetta fotografica|camera
+la danza classica|ballet
+socializzare|to socialize
+un drink|a drink
+ordinare da mangiare / da bere|to order food/drinks
+la vita notturna|nightlife
+il carnevale|carnival
+la festa|party
+vedere uno spettacolo|to see a show
+il casinò|casino
+lo spettacolo|show
+guardare un film|to watch a film
+il film|film
+andare a ballare|to go dancing
+lo spettacolo comico|comedy show
+il festival|festival
+il concerto|concert
+il luna park|funfair
+il night|nightclub
+il musical|musical
+l'opera (f)|opera
+fare il check out|to check out
+il bed and breakfast|bed and breakfast
+la reception|reception
+ordinare il servizio in camera|to order room service
+la pensione completa|full board
+il receptionist|receptionist
+la mezza pensione|half board
+la cassaforte|safe
+il cartellino “non disturbare”|“do not disturb” sign
+il servizio in camera|room service
+la camera singola|single room
+la sveglia|wake-up call
+la camera doppia|double room
+gli articoli da toilette|toiletries
+il numero di camera|room number
+la tessera magnetica|key card
+la camera doppia con letti singoli|twin room
+per persona per notte|per person per night
+il minibar|minibar
+fare il check in|to check in
+il frigo portatile|cool box
+montare una tenda|to pitch a tent
+il campeggio|campsite
+la sedia pieghevole|fold-up chair
+smontare una tenda|to take down a tent
+i fiammiferi|matches
+andare in roulotte|to go caravanning
+il cavo di allacciamento elettrico|electricity hook-up
+il materassino|air bed
+i servizi igienici|toilet/shower block
+la coperta da picnic|picnic blanket
+la griglia|barbecue
+il campeggiatore / la campeggiatrice|camper
+il sacco a pelo|sleeping bag
+il fornello da campeggio|camping stove
+il roulottista|caravanner
+la torcia|torch
+accamparsi|to camp
+“Divieto di balneazione.”|“No swimming.”
+la postazione del bagnino|lifeguard station
+prendere il sole|to sunbathe
+nuotare|to swim
+la zona di balneazione|bathing zone
+l'abbronzatura (f)|suntan
+le onde|waves
+il lettino da spiaggia|sunbed
+l'ombrellone (m)|parasol
+l'asciugamano da mare (m)|beach towel
+le pinne|flippers
+il pallone da spiaggia|beach ball
+il cappello da sole|sunhat
+il lungomare|promenade
+la cabina da spiaggia|beach hut
+il castello di sabbia|sandcastle
+le conchiglie|seashells
+il secchiello e la paletta|bucket and spade
+l'alga marina (f)|seaweed
+la sdraio|deckchair
+il paravento|windbreak
+il boccaglio|snorkel
+le ciabatte infradito|flip-flops
+`,
+"Music & arts":`il DJ|DJ
+il disco in vinile|vinyl record
+la canzone|song
+il CD|CD
+il microfono|microphone
+il gruppo|band
+cantare|to sing
+la musica hip-hop|hip-hop
+il cantautore|singer-songwriter
+il rap|rap
+la musica dal vivo|live music
+andare ai concerti|to go to gigs
+la musica classica|classical music
+ascoltare musica in streaming|to stream music
+la musica popolare|folk music
+il pop|pop
+suonare uno strumento|to play an instrument
+il rock|rock
+l'altoparlante Bluetooth® (m)|Bluetooth® speaker
+le cuffie|headphones
+gli altoparlanti|speakers
+il sistema SoundBar|soundbar
+il giradischi|turntable
+gli auricolari|earphones
+l'armonica a bocca (f)|mouth organ
+i piatti|cymbals
+la fisarmonica|accordion
+il pianoforte|piano
+il contrabbasso|double bass
+la chitarra acustica|acoustic guitar
+il sassofono|saxophone
+la chitarra elettrica|electric guitar
+la grancassa|bass drum
+il tamburo rullante|snare drum
+il flauto|flute
+il trombone|trombone
+l'arpa (f)|harp
+il violoncello|cello
+la tromba|trumpet
+il clarinetto|clarinet
+la tuba|tuba
+il violino|violin
+lo xilofono|xylophone
+il coro|choir
+il musicista / la musicista|musician
+lo spartito|sheet music
+il direttore d'orchestra|conductor
+il cantante / la cantante|singer
+l'orchestra (f)|orchestra
+il drone|drone
+fare una foto / un selfie|to take a photo/selfie
+il fotografo|photographer
+la macchina fotografica DSLR|DSLR camera
+la foto|photo
+caricare una foto|to upload a photo
+l'album di foto (m)|photo album
+la scheda SD|SD card
+zumare|to zoom in
+il primo piano|close-up
+il treppiede|tripod
+la lente|camera lens
+il selfie|selfie
+la macchina fotografica compatta|compact camera
+il bastone per i selfie|selfie stick
+il bowling|bowling
+il joystick|joystick
+il giocatore|player
+le carte|cards
+il visore per la realtà virtuale|virtual reality headset
+il gioco dei mimi|charades
+gli scacchi|chess
+il nascondino|hide and seek
+i segnalini|counters
+i birilli|skittles
+tirare i dadi|to roll the dice
+il cruciverba|crossword
+il solitario|solitaire
+le freccette|darts
+il poker|poker
+i dadi|dice
+giocare ad acchiapparella|to play tag
+il domino|dominoes
+il videogioco|video game
+il tric-trac|backgammon
+la dama|draughts
+la console|games console
+il gioco da tavolo|board game
+il puzzle|jigsaw puzzle
+il controller|game controller
+fare uno schizzo|to sketch
+l'artista (m)|artist
+l'artigianato (m)|handicrafts
+cucire|to sew
+il sarto / la sarta|dressmaker
+la fiera dell'artigianato|craft fair
+fare la maglia|to knit
+dilettante|amateur
+il cartone|cardboard
+essere creativo|to be creative
+la colla|glue
+il collage|collage
+la gioielleria|jewellery-making
+la ceramica|pottery
+il ricamo|embroidery
+il modellismo|model-making
+la tela|canvas
+la tavolozza|palette
+l'album per schizzi (m)|sketchpad
+l'inchiostro (m)|ink
+gli acquerelli|watercolours
+i pastelli|pastels
+la pittura a olio|oil paint
+la spilla da balia|safety pin
+le forbici da tessuto|fabric scissors
+il gomitolo di lana|ball of wool
+il cestino del cucito|sewing basket
+i ferri da maglia|knitting needles
+i bottoni|buttons
+la macchina da cucire|sewing machine
+l'ago e il filo (m)|needle and thread
+l'uncinetto (m)|crochet hook
+gli spilli|pins
+il tessuto|fabric
+il metro a nastro|tape measure
+`,
+"Verbs -are":`parlare|to speak, to talk
+ascoltare|to listen, to hear
+imparare|to learn
+insegnare|to teach
+visitare|to visit
+tornare|to return, to come back
+ricordare|to remember
+iniziare|to begin, to start
+terminare|to finish, to end
+arrivare|to arrive
+pranzare|to eat lunch, to have lunch
+cenare|to eat dinner, to have dinner
+mandare|to send
+incontrare|to meet
+abitare|to live, to inhabit
+preparare|to prepare
+usare|to use
+accettare|to accept
+ringraziare|to thank
+giocare|to play (sport, game)
+lasciare|to leave, to let
+portare|to carry, to bring
+sembrare|to seem
+diventare|to become
+presentare|to present, to introduce
+lavorare|to work
+spiegare|to explain
+accompagnare|to accompany
+pregare|to pray
+dimostrare|to demonstrate, to show
+sperare|to hope
+lavare|to wash
+camminare|to walk
+immaginare|to imagine
+assicurare|to assure, to ensure
+informare|to inform
+desiderare|to desire, to wish
+allontanare|to take away, to move away
+comandare|to order, to command
+prenotare|to book
+studiare|to study
+guardare|to watch, to look at
+telefonare|to telephone, to call
+entrare|to enter
+dimenticare|to forget
+cominciare|to begin, to start
+aspettare|to wait, to wait for
+mangiare|to eat
+inviare|to send
+rifiutare|to refuse
+aiutare|to help
+suonare|to play (instrument)
+trovare|to find
+pensare|to think
+passare|to pass, to go by
+chiamare|to call
+restare|to remain, to stay
+continuare|to continue
+osservare|to observe
+mostrare|to show
+raccontare|to tell (about)
+occupare|to occupy
+tentare|to attempt, to try
+girare|to turn
+passeggiare|to walk, to stroll
+salutare|to greet
+scusare|to excuse
+guidare|to drive, to guide
+avvicinare|to bring near, to approach
+ordinare|to order
+ammirare|to admire
+riservare|to reserve
+cercare|to look for, to search
+mancare|to be lacking, to be missing
+provare|to try, to test
+`,
+"Verbs -ere":`vedere|to see
+prendere|to take, to get
+mettere|to put, to place
+rispondere|to respond, to answer
+accendere|to turn on, to switch on
+spegnere|to turn off, to switch off
+chiudere|to close
+scrivere|to write
+ricevere|to receive
+leggere|to read
+comprendere|to understand
+ripetere|to repeat
+vendere|to sell
+chiedere|to ask, to request
+attendere|to wait for
+credere|to believe
+conoscere|to know
+vivere|to live
+perdere|to lose
+vincere|to win
+rendere|to give back
+correre|to run
+smettere|to stop
+giungere|to arrive at, to reach
+ridere|to laugh
+piangere|to cry
+permettere|to permit, to allow
+promettere|to promise
+sorridere|to smile
+costringere|to force
+spingere|to push, to press
+dividere|to divide
+concludere|to conclude
+possedere|to possess, to own
+risolvere|to solve
+concedere|to allow, to grant
+convincere|to convince
+offendere|to offend
+scegliere|to choose, to select
+tradurre|to translate
+dipingere|to paint
+assistere|to attend, to assist
+muovere|to move
+esprimere|to express
+trarre|to draw, to derive
+rompere|to break
+sconfiggere|to defeat, to overcome
+decidere|to decide
+`,
+"Verbs -ire":`sentire|to hear, to feel
+aprire|to open
+dormire|to sleep
+partire|to leave, to depart
+servire|to serve
+offrire|to offer
+coprire|to cover
+scoprire|to uncover, to discover
+soffrire|to suffer
+vestire|to dress
+divertire|to amuse
+consentire|to consent
+acconsentire|to agree
+eseguire|to perform, to execute
+proseguire|to continue, to proceed
+investire|to invest
+applaudire|to applaud
+mentire|to lie
+nutrire|to feed, to nourish
+assorbire|to absorb
+aborrire|to loathe, to abhor
+`,
+"Verbs -ire (isc)":`capire|to understand
+finire|to finish
+pulire|to clean
+spedire|to send, to ship
+preferire|to prefer
+unire|to unite
+riferire|to report
+impedire|to impede, to prevent
+colpire|to hit
+definire|to define
+chiarire|to clarify
+subire|to suffer, to undergo
+sparire|to vanish, to disappear
+favorire|to favor, to favour
+digerire|to digest
+attribuire|to attribute
+agire|to act
+garantire|to guarantee
+seppellire|to bury
+contribuire|to contribute
+diminuire|to reduce, to decrease
+dimagrire|to grow thin, to lose weight
+suggerire|to suggest
+inserire|to insert
+stupire|to amaze, to astonish
+restituire|to return, to give back
+obbedire|to obey
+esaudire|to grant
+esaurire|to exhaust
+istituire|to institute
+costruire|to construct, to build
+demolire|to demolish
+custodire|to guard, to keep
+conferire|to confer, to give
+guarire|to cure, to heal
+impazzire|to go crazy, to go mad
+tossire|to cough
+`,
+"Reflexive verbs":`ricordarsi|to remember
+fermarsi|to stop, to pause
+riposarsi|to rest
+stancarsi|to get tired
+divertirsi|to enjoy oneself, to have fun
+prepararsi|to get ready, to prepare oneself
+incontrarsi|to meet
+mettersi|to put on
+sedersi|to sit down
+sposarsi|to get married
+occuparsi|to take care of, to deal with
+preoccuparsi|to worry
+interessarsi|to be interested in, to show interest in
+svegliarsi|to wake up
+alzarsi|to get up, to rise
+addormentarsi|to fall asleep, to go to sleep
+sentirsi|to feel
+accomodarsi|to take a seat
+ammalarsi|to become ill, to get sick
+abbracciarsi|to hug
+baciarsi|to kiss
+annoiarsi|to get bored
+arrabbiarsi|to get angry
+abituarsi|to get used to
+chiamarsi|to be called
+comportarsi|to behave
+conoscersi|to meet, to get to know each other
+dimenticarsi|to forget
+impegnarsi|to commit, to promise
+innamorarsi|to fall in love
+lamentarsi|to complain
+truccarsi|to put on makeup, to do one's makeup
+radersi|to shave
+rilassarsi|to relax
+spazzolarsi|to brush
+pettinarsi|to comb one's hair, to comb
+vergognarsi|to be ashamed
+vestirsi|to get dressed
+abbronzarsi|to tan, to get a tan
+azzittirsi|to go quiet, to shut up
+presentarsi|to introduce oneself, to present oneself
+girarsi|to turn around
+sbagliarsi|to make a mistake, to be wrong
+fidanzarsi|to get engaged
+`
+};
+
+// ---------- vocabulary data ----------
+const WORDS=[]; const CATS=Object.keys(RAW);
+CATS.forEach(cat=>RAW[cat].trim().split("\n").forEach(l=>{const [it,en]=l.split("|");WORDS.push({it:it.trim(),en:en.trim(),cat});}));
+
+// ---------- verb conjugation ----------
+const PERSONS=["io","tu","lui/lei","noi","voi","loro"];
+const TENSES={pres:"Presente",imp:"Imperfetto",fut:"Futuro semplice",pp:"Passato prossimo"};
+const REFL_PR=["mi","ti","si","ci","vi","si"];
+const AVERE_AUX=["ho","hai","ha","abbiamo","avete","hanno"];
+const ESSERE_AUX=["sono","sei","è","siamo","siete","sono"];
+
+// Irregular presente, from the guide's "Common irregular verbs" table
+// (two typos fixed: parere tu "pari", sedere voi "sedete")
+const IRR_PRES={andare:"vado vai va andiamo andate vanno",avere:"ho hai ha abbiamo avete hanno",bere:"bevo bevi beve beviamo bevete bevono",
+ dare:"do dai dà diamo date danno",dire:"dico dici dice diciamo dite dicono",dovere:"devo devi deve dobbiamo dovete devono",
+ essere:"sono sei è siamo siete sono",fare:"faccio fai fa facciamo fate fanno",morire:"muoio muori muore moriamo morite muoiono",
+ parere:"paio pari pare paiamo parete paiono",piacere:"piaccio piaci piace piacciamo piacete piacciono",porre:"pongo poni pone poniamo ponete pongono",
+ potere:"posso puoi può possiamo potete possono",rimanere:"rimango rimani rimane rimaniamo rimanete rimangono",salire:"salgo sali sale saliamo salite salgono",
+ sapere:"so sai sa sappiamo sapete sanno",sedere:"siedo siedi siede sediamo sedete siedono",stare:"sto stai sta stiamo state stanno",
+ tenere:"tengo tieni tiene teniamo tenete tengono",togliere:"tolgo togli toglie togliamo togliete tolgono",tradurre:"traduco traduci traduce traduciamo traducete traducono",
+ udire:"odo odi ode udiamo udite odono",uscire:"esco esci esce usciamo uscite escono",venire:"vengo vieni viene veniamo venite vengono",
+ volere:"voglio vuoi vuole vogliamo volete vogliono"};
+// extra accepted forms (from your vedere screenshot)
+const EXTRA_ACC={"vedere|pres|0":"veggo","vedere|pres|5":"veggono"};
+// Imperfetto stems listed as irregular in the guide
+const IRR_IMP_STEM={bere:"beve",dire:"dice",fare:"face",porre:"pone",tradurre:"traduce"};
+// Futuro stems listed as irregular in the guide
+const IRR_FUT_STEM={dare:"dar",essere:"sar",fare:"far",stare:"star",andare:"andr",avere:"avr",cadere:"cadr",dovere:"dovr",potere:"potr",
+ vedere:"vedr",vivere:"vivr",bere:"berr",porre:"porr",rimanere:"rimarr",tradurre:"tradurr",venire:"verr",volere:"vorr"};
+
+// Participio passato: only those given in the guide (+ comprato/dormito from your screenshots)
+const PP={};
+`comprare comprato|dormire dormito|mettere messo|rispondere risposto|chiudere chiuso|leggere letto|chiedere chiesto|perdere perso|rendere reso|risolvere risolto|prendere preso|porre posto|tradurre tradotto|scegliere scelto|assistere assistito|dipingere dipinto|esprimere espresso|muovere mosso|rompere rotto|decidere deciso|fare fatto|dire detto|aprire aperto|coprire coperto|scoprire scoperto|soffrire sofferto|togliere tolto|tenere tenuto|ridere riso|accendere acceso|bere bevuto|correre corso|dividere diviso|offendere offeso|offrire offerto|scrivere scritto|spegnere spento|vedere visto/veduto|vincere vinto|vivere vissuto|piangere pianto`
+ .split("|").forEach(x=>{const[i,p]=x.split(" ");PP[i]={aux:"avere",part:p.split("/")};});
+`essere stato|stare stato|rimanere rimasto|restare restato|riuscire riuscito|andare andato|venire venuto|entrare entrato|uscire uscito|arrivare arrivato|partire partito|tornare tornato|cadere caduto|giungere giunto|sparire sparito|nascere nato|morire morto|crescere cresciuto|ingrassare ingrassato|dimagrire dimagrito|invecchiare invecchiato|ringiovanire ringiovanito|arrossire arrossito|impallidire impallidito|guarire guarito|impazzire impazzito|diventare diventato|sembrare sembrato|costare costato|dipendere dipeso|mancare mancato|piacere piaciuto|interessare interessato`
+ .split("|").forEach(x=>{const[i,p]=x.split(" ");PP[i]={aux:"essere",part:p.split("/")};});
+
+// Verbs from the guide's irregular and passato prossimo pages that are not in the verb lists
+const EXTRA_VERBS=`comprare|to buy
+andare|to go
+avere|to have
+bere|to drink
+dare|to give
+dire|to say, to tell
+dovere|to have to, must
+essere|to be
+fare|to do, to make
+morire|to die
+parere|to appear, to seem
+piacere|to please, to like
+porre|to put, to place
+potere|to be able to, can
+rimanere|to stay, to remain
+salire|to go up, to ascend
+sapere|to know
+sedere|to sit
+stare|to stay, to be
+tenere|to keep, to hold
+togliere|to take away, to remove
+udire|to hear
+uscire|to leave, to go out, to exit
+venire|to come
+volere|to want
+nascere|to be born
+crescere|to grow
+cadere|to fall
+ingrassare|to fatten, to gain weight
+invecchiare|to age, to grow old
+ringiovanire|to look younger
+arrossire|to blush
+impallidire|to turn pale
+costare|to cost
+dipendere|to depend on
+riuscire|to succeed, to be successful
+interessare|to interest`;
+
+const SKIP=new Set(["trarre","farsi"]);           // forms not covered by the guide
+const NO_PRES=new Set(["scegliere","spegnere","possedere","riuscire","ringiovanire","arrossire","impallidire","azzittirsi"]);
+const NO_FUT=new Set(["sapere","tenere","parere"]);
+const STRESSED_I=new Set(["inviare"]);          // tu invii (stressed i is kept)
+const GROUPS={are:"Regular -are",ere:"Regular -ere",ire:"Regular -ire",isc:"-ire (isc)",irr:"Irregular",refl:"Reflexive"};
+const ISC=new Set(), NONISC=new Set();
+WORDS.forEach(w=>{if(w.cat==="Verbs -ire (isc)")ISC.add(w.it); if(w.cat==="Verbs -ire")NONISC.add(w.it);});
+const VERBS=[]; const seenV=new Set();
+function addVerb(inf,en){
+  if(SKIP.has(inf)||seenV.has(inf)) return; seenV.add(inf);
+  const refl=/rsi$/.test(inf), base=refl?inf.slice(0,-2)+"e":inf, end=base.slice(-3);
+  const group=refl?"refl":(IRR_PRES[base]||IRR_IMP_STEM[base]||["cadere","vedere","vivere"].includes(base))?"irr":end==="are"?"are":end==="ere"?"ere":ISC.has(base)?"isc":"ire";
+  VERBS.push({inf,base,en,refl,group,isc:ISC.has(base),nonisc:NONISC.has(base),noPres:NO_PRES.has(inf),noFut:NO_FUT.has(base),cache:{}});
+}
+WORDS.filter(w=>/^Verbs|^Reflexive/.test(w.cat)).forEach(w=>addVerb(w.it,w.en));
+EXTRA_VERBS.split("\n").forEach(l=>{const[a,b]=l.split("|");addVerb(a.trim(),b.trim());});
+
+function baseConj(inf,tense,info){
+  const end=inf.slice(-3), st=inf.slice(0,-3);
+  if(tense==="pres"){
+    if(IRR_PRES[inf]) return IRR_PRES[inf].split(" ");
+    if(info.noPres) return null;
+    if(end==="are"){
+      let tu,noi;
+      if(/[cg]$/.test(st)){tu=st+"hi";noi=st+"hiamo";}
+      else if(/i$/.test(st)){tu=STRESSED_I.has(inf)?st+"i":st;noi=st+"amo";}
+      else{tu=st+"i";noi=st+"iamo";}
+      return [st+"o",tu,st+"a",noi,st+"ate",st+"ano"];
+    }
+    if(end==="ere") return [st+"o",st+"i",st+"e",st+"iamo",st+"ete",st+"ono"];
+    if(end==="ire"){
+      if(info.isc) return [st+"isco",st+"isci",st+"isce",st+"iamo",st+"ite",st+"iscono"];
+      if(info.nonisc) return [st+"o",st+"i",st+"e",st+"iamo",st+"ite",st+"ono"];
+    }
+    return null;
+  }
+  if(tense==="imp"){
+    if(inf==="essere") return "ero eri era eravamo eravate erano".split(" ");
+    const s=IRR_IMP_STEM[inf]||inf.slice(0,-2);
+    return ["vo","vi","va","vamo","vate","vano"].map(e=>s+e);
+  }
+  if(tense==="fut"){
+    if(info.noFut) return null;
+    let s=IRR_FUT_STEM[inf];
+    if(!s){
+      if(end==="are"){let b=st; if(/[cg]$/.test(b)) b+="h"; else if(/[cg]i$/.test(b)) b=b.slice(0,-1); s=b+"er";}
+      else s=inf.slice(0,-1);
+    }
+    return ["ò","ai","à","emo","ete","anno"].map(e=>s+e);
+  }
+  return null;
+}
+// returns 6 cells {show, acc[]} or null when the guide doesn't cover it
+function conj(v,tense){
+  if(tense in v.cache) return v.cache[tense];
+  let out=null;
+  if(tense==="pp"){
+    const p=v.refl?null:PP[v.inf];
+    if(p){
+      if(p.aux==="avere") out=AVERE_AUX.map(a=>({show:a+" "+p.part.join("/"),acc:p.part.map(x=>a+" "+x)}));
+      else out=ESSERE_AUX.map((a,i)=>{const pl=i>=3,acc=[],sh=[];
+        p.part.forEach(x=>{const s=x.slice(0,-1); if(pl){acc.push(a+" "+s+"i",a+" "+s+"e");sh.push(s+"i/e");}else{acc.push(a+" "+s+"o",a+" "+s+"a");sh.push(s+"o/a");}});
+        return {show:a+" "+sh.join(" / "),acc};});
+    }
+  } else {
+    const arr=baseConj(v.base,tense,v);
+    if(arr) out=arr.map((f,i)=>{
+      let acc=[f]; const ex=EXTRA_ACC[v.base+"|"+tense+"|"+i]; if(ex) acc.push(ex);
+      if(v.refl) acc=acc.map(x=>REFL_PR[i]+" "+x);
+      return {show:acc.join(" / "),acc};
+    });
+  }
+  v.cache[tense]=out; return out;
+}
+function stripAcc(s){return s.normalize("NFD").replace(/[̀-ͯ]/g,"");}
+function normForm(s,ia){
+  s=s.toLowerCase().trim().replace(/[’`]/g,"'");
+  if(ia) s=stripAcc(s);
+  s=s.replace(/[.!?,]/g," ").replace(/\s+/g," ").trim();
+  s=s.replace(/^(io|tu|lui\/lei|lei\/lui|lui|lei|noi|voi|loro)\s+/,"");
+  return s;
+}
+const IDX={};
+function formIndex(ia){
+  const k=ia?1:0; if(IDX[k]) return IDX[k];
+  const m=new Map();
+  VERBS.forEach(v=>Object.keys(TENSES).forEach(t=>{const c=conj(v,t); if(!c) return;
+    c.forEach((cell,p)=>cell.acc.forEach(a=>{const key=normForm(a,ia); if(!m.has(key)) m.set(key,[]); m.get(key).push({v,t,p});}));}));
+  return IDX[k]=m;
+}
+
+// irregular/other verbs from the guide's grammar pages also become vocabulary
+const OTHER_VERBS="Other verbs";
+VERBS.forEach(v=>{ if(!WORDS.some(w=>w.it===v.inf)) WORDS.push({it:v.inf,en:v.en,cat:OTHER_VERBS}); });
+CATS.push(OTHER_VERBS);
+const VERB_CATS=new Set(["Verbs -are","Verbs -ere","Verbs -ire","Verbs -ire (isc)","Reflexive verbs",OTHER_VERBS]);
+// a word counts as a verb if it is in a verb list, or is a single-word infinitive translated as "to ..."
+const isVerbWord=w=>VERB_CATS.has(w.cat)||(/^to /i.test(w.en)&&/^[a-zàèéìòù]+(are|ere|ire|rre|rsi)$/i.test(w.it));
+const VERB_COUNT={}; WORDS.forEach(w=>{if(isVerbWord(w)) VERB_COUNT[w.cat]=(VERB_COUNT[w.cat]||0)+1;});
+const WORD_COUNT={}; WORDS.forEach(w=>{WORD_COUNT[w.cat]=(WORD_COUNT[w.cat]||0)+1;});
+
+// ---------- vocab answer checking ----------
+const ARTICLES=/^(?:(?:the|an|a|to|il|lo|la|i|gli|le|un|uno|una)\s+|(?:l|un)'\s*)/;
+function norm(s,ignoreAcc){
+  s=s.toLowerCase().trim().replace(/[’`]/g,"'");
+  if(ignoreAcc) s=stripAcc(s);
+  s=s.replace(/[.!?]/g,"").replace(/\s+/g," ");
+  let prev; do{prev=s;s=s.replace(ARTICLES,"");}while(s!==prev);
+  return s.trim();
+}
+function variants(str,ignoreAcc){
+  const out=new Set();
+  [str, str.replace(/\([^)]*\)/g,"")].join(",").split(/[,;/]/).forEach(p=>{p=p.trim(); if(!p) return;
+    out.add(norm(p,ignoreAcc));
+    out.add(norm(p.replace(/\([^)]*\)/g,""),ignoreAcc));
+    out.add(norm(p.replace(/[()]/g,""),ignoreAcc));
+  });
+  out.delete(""); return out;
+}
+function lev(a,b){const m=a.length,n=b.length;if(Math.abs(m-n)>1)return 2;const d=Array.from({length:m+1},(_,i)=>[i]);for(let j=1;j<=n;j++)d[0][j]=j;
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n];}
+function accepted(q,ignoreAcc){
+  if(q.dir==="it-en") return variants(q.w.en,ignoreAcc);
+  const enSet=variants(q.w.en,ignoreAcc), out=variants(q.w.it,ignoreAcc);
+  WORDS.forEach(w=>{ if(w===q.w) return; const e=variants(w.en,ignoreAcc); for(const x of e) if(enSet.has(x)){variants(w.it,ignoreAcc).forEach(v=>out.add(v));break;} });
+  return out;
+}
+function grade(q,input,ignoreAcc){
+  const a=norm(input,ignoreAcc); if(!a) return "wrong";
+  const acc=accepted(q,ignoreAcc); if(acc.has(a)) return "right";
+  for(const v of acc) if(v.length>=5 && lev(a,v)===1) return "close";
+  return "wrong";
+}
+function cellOk(cell,input,ia){const g=normForm(input,ia); return !!g && cell.acc.some(a=>normForm(a,ia)===g);}
+
+// ---------- storage ----------
+const KEY="itVocabLog_v1";
+function loadLog(){try{return JSON.parse(localStorage.getItem(KEY)||"[]");}catch(e){return [];}}
+function saveLog(l){try{localStorage.setItem(KEY,JSON.stringify(l));}catch(e){}}
+function loadPrefs(){try{return JSON.parse(localStorage.getItem(KEY+"_prefs")||"null");}catch(e){return null;}}
+function savePrefs(p){try{localStorage.setItem(KEY+"_prefs",JSON.stringify(p));}catch(e){}}
+
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const radio=n=>document.querySelector(`input[name=${n}]:checked`).value;
+
+// ---------- setup UI ----------
+function chip(box,id,value,text,n,checked){const lab=document.createElement("label");lab.className="chip";
+  lab.innerHTML=`<input type="checkbox" id="${id}" value="${esc(value)}"${checked?" checked":""}> ${esc(text)} ${n!=null?`<span class="n">${n}</span>`:""}`;box.appendChild(lab);}
+CATS.forEach((c,i)=>{chip($("cats"),"cat"+i,c,c,WORDS.filter(w=>w.cat===c).length,true); $("cats").lastChild.dataset.cat=c;});
+Object.entries(TENSES).forEach(([k,l])=>chip($("tenses"),"t-"+k,k,l,VERBS.filter(v=>conj(v,k)).length,true));
+Object.entries(GROUPS).forEach(([k,l])=>chip($("groups"),"g-"+k,k,l,VERBS.filter(v=>v.group===k).length,true));
+const checked=box=>[...$(box).querySelectorAll("input:checked")].map(c=>c.value);
+
+const prefs=loadPrefs();
+if(prefs){
+  const setR=(n,v)=>{const r=v&&document.querySelector(`input[name=${n}][value="${v}"]`); if(r) r.checked=true;};
+  setR("mode",prefs.mode); setR("vscope",prefs.vscope); setR("dir",prefs.dir); setR("fdir",prefs.fdir);
+  if(prefs.count) $("count").value=prefs.count;
+  const setC=(box,arr)=>{if(Array.isArray(arr)) $(box).querySelectorAll("input").forEach(cb=>cb.checked=arr.includes(cb.value));};
+  setC("cats",prefs.cats); setC("tenses",prefs.tenses); setC("groups",prefs.groups);
+  if(typeof prefs.accents==="boolean") $("accents").checked=prefs.accents;
+}
+function vocabPool(){const s=new Set(checked("cats")),vo=radio("vscope")==="verbs";return WORDS.filter(w=>s.has(w.cat)&&(!vo||isVerbWord(w)));}
+function tablePool(){const g=new Set(checked("groups")),ts=checked("tenses"),out=[];
+  VERBS.forEach(v=>{if(!g.has(v.group))return; ts.forEach(t=>{const c=conj(v,t); if(c) out.push({v,t,c});});}); return out;}
+function formPool(){const out=[];tablePool().forEach(x=>x.c.forEach((_,p)=>out.push({...x,p})));return out;}
+function poolSize(){const m=radio("mode");return m==="vocab"?vocabPool().length:m==="form"?formPool().length:tablePool().length;}
+const HINTS={vocab:"A word is shown; type its translation.",
+  form:"Verb → form: you get a verb, person and tense and type the conjugated form. Form → verb: you get a form and name the infinitive, person and tense.",
+  table:"You get a verb and a tense and fill in all six persons, io to loro. Each correct person scores one point."};
+function updateSetup(){
+  const m=radio("mode");
+  $("vocabScopeBox").hidden=$("vocabDirBox").hidden=$("topicBox").hidden=m!=="vocab";
+  const vo=radio("vscope")==="verbs";
+  $("cats").querySelectorAll(".chip").forEach(c=>{const k=c.dataset.cat,n=vo?(VERB_COUNT[k]||0):WORD_COUNT[k]; c.hidden=!n; c.querySelector(".n").textContent=n;});
+  const hasV=c=>!vo||VERB_COUNT[c];
+  const visCats=CATS.filter(hasV), selCats=checked("cats").filter(hasV);
+  $("topicSum").textContent=selCats.length===visCats.length?`· all ${visCats.length} selected`:`· ${selCats.length} of ${visCats.length} selected`;
+  const nt=checked("tenses").length, ng=checked("groups").length, TT=Object.keys(TENSES).length, GG=Object.keys(GROUPS).length;
+  $("verbSum").textContent=`· ${nt===TT?"all tenses":nt+" of "+TT+" tenses"}, ${ng===GG?"all groups":ng+" of "+GG+" groups"}`;
+  $("formDirBox").hidden=m!=="form"; $("verbBox").hidden=m==="vocab";
+  $("modeHint").textContent=HINTS[m];
+  $("countLabel").textContent=m==="table"?"Number of verbs to conjugate":"Number of questions";
+  const n=poolSize();
+  $("poolInfo").textContent=m==="vocab"?`${n} of ${WORDS.length} words selected`:m==="form"?`${n} verb forms available`:`${n} verb–tense tables available`;
+}
+$("setup").addEventListener("change",updateSetup);
+$("allCats").onclick=()=>{$("cats").querySelectorAll(".chip:not([hidden]) input").forEach(c=>c.checked=true);updateSetup();};
+$("noCats").onclick=()=>{$("cats").querySelectorAll(".chip:not([hidden]) input").forEach(c=>c.checked=false);updateSetup();};
+document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{$("count").value=b.dataset.n==="all"?poolSize():b.dataset.n;});
+updateSetup();
+
+// ---------- quiz ----------
+let S=null;
+function newRound(qs,info){
+  S={qs,i:0,score:0,total:0,results:[],ia:$("accents").checked,answered:false,...info};
+  $("setup").hidden=true;$("results").hidden=true;$("logCard").hidden=true;$("quiz").hidden=false;showQ();
+}
+$("start").onclick=()=>{
+  const mode=radio("mode"); let n=parseInt($("count").value,10);
+  if(!n||n<1){$("startErr").textContent="Enter how many questions you want.";return;}
+  const pr={mode,vscope:radio("vscope"),dir:radio("dir"),fdir:radio("fdir"),count:$("count").value,cats:checked("cats"),tenses:checked("tenses"),groups:checked("groups"),accents:$("accents").checked};
+  savePrefs(pr);
+  let qs,details;
+  if(mode==="vocab"){
+    const p=vocabPool(); if(!p.length){$("startErr").textContent="Pick at least one topic.";return;}
+    qs=shuffle([...p]).slice(0,n).map(w=>({type:"vocab",w,dir:pr.dir==="mix"?(Math.random()<.5?"it-en":"en-it"):pr.dir}));
+    const vc=pr.vscope==="verbs"?pr.cats.filter(c=>VERB_COUNT[c]):pr.cats, all=pr.vscope==="verbs"?Object.keys(VERB_COUNT).length:CATS.length;
+    details=(pr.vscope==="verbs"?"Verbs only · ":"")+(vc.length===all?"All topics":vc.join(", "));
+  } else {
+    if(!pr.tenses.length||!pr.groups.length){$("startErr").textContent="Pick at least one tense and one verb group.";return;}
+    const p=mode==="form"?formPool():tablePool();
+    if(!p.length){$("startErr").textContent="No verbs match this choice. Add another tense or group.";return;}
+    qs=shuffle([...p]).slice(0,n).map(x=>{
+      if(mode==="table") return {type:"table",v:x.v,t:x.t,c:x.c};
+      const dir=pr.fdir==="mix"?(Math.random()<.5?"give":"ident"):pr.fdir;
+      const cell=x.c[x.p]; return {type:"form",v:x.v,t:x.t,c:x.c,p:x.p,dir,shown:cell.acc[Math.floor(Math.random()*cell.acc.length)]};
+    });
+    const g=pr.groups.length===Object.keys(GROUPS).length?"all verb groups":pr.groups.map(k=>GROUPS[k]).join(", ");
+    details=pr.tenses.map(k=>TENSES[k]).join(", ")+" · "+g;
+  }
+  $("startErr").textContent="";
+  newRound(qs,{mode,dir:mode==="vocab"?pr.dir:mode==="form"?pr.fdir:"table",details,tenses:pr.tenses});
+};
+
+function input(id,ph){return `<input type="text" id="${id}" placeholder="${esc(ph)}" autocapitalize="off" autocomplete="off" spellcheck="false">`;}
+function showQ(){
+  const q=S.qs[S.i]; S.answered=false;
+  $("qnum").textContent=`${q.type==="table"?"Verb":"Question"} ${S.i+1} of ${S.qs.length}`;
+  $("qscore").textContent=`Score ${S.score}${S.total?" / "+S.total:""}`;
+  $("bar").style.width=(S.i/S.qs.length*100)+"%";
+  $("fb").hidden=true;$("override").hidden=true;$("skip").disabled=false;$("submitBtn").textContent="Check";
+  const F=$("fields"); F.className="";
+  if(q.type==="vocab"){
+    $("qdir").textContent=q.dir==="it-en"?"Italian → English":"English → Italian";
+    $("qprompt").textContent=q.dir==="it-en"?q.w.it:q.w.en;
+    $("qcat").innerHTML=`<span class="small">${esc(q.w.cat)}</span>`;
+    F.innerHTML=input("answer",q.dir==="it-en"?"Type the English":"Scrivi in italiano");
+  } else if(q.type==="form"&&q.dir==="give"){
+    $("qdir").textContent="Verb → form";
+    $("qprompt").textContent=q.v.inf;
+    $("qcat").innerHTML=`<span class="tag strong">${PERSONS[q.p]}</span><span class="tag">${TENSES[q.t]}</span><div class="small">${esc(q.v.en)}</div>`;
+    F.innerHTML=input("answer","Type the form");
+  } else if(q.type==="form"){
+    $("qdir").textContent="Form → verb";
+    $("qprompt").textContent=q.shown;
+    $("qcat").innerHTML=`<span class="small">Name the infinitive, the person and the tense</span>`;
+    F.className="ident";
+    const ts=(S.tenses&&S.tenses.length?S.tenses:Object.keys(TENSES));
+    F.innerHTML=input("answer","Infinitive")+
+      `<select id="selP" aria-label="Person"><option value="">Person</option>${PERSONS.map((p,i)=>`<option value="${i}">${p}</option>`).join("")}</select>`+
+      `<select id="selT" aria-label="Tense">${ts.length>1?'<option value="">Tense</option>':""}${ts.map(t=>`<option value="${t}">${TENSES[t]}</option>`).join("")}</select>`;
+  } else {
+    $("qdir").textContent="Full conjugation";
+    $("qprompt").textContent=q.v.inf;
+    $("qcat").innerHTML=`<span class="tag strong">${TENSES[q.t]}</span><div class="small">${esc(q.v.en)}</div>`;
+    F.className="table";
+    F.innerHTML=PERSONS.map((p,i)=>`<label class="who" for="c${i}">${p}</label><div class="cell">${input("c"+i,"")}<span class="mark" id="m${i}"></span></div>`).join("");
+  }
+  F.querySelector("input").focus();
+}
+function refTable(q){return `<div class="ref">${PERSONS.map((p,i)=>`${p} <b>${esc(q.c[i].show)}</b>`).join(" · ")}</div>`;}
+function setFb(cls,html){const fb=$("fb");fb.hidden=false;fb.className="feedback "+cls;fb.innerHTML=html;}
+
+function answer(skipped){
+  const q=S.qs[S.i], ia=S.ia, val=id=>($(id)?$(id).value:"");
+  let pts=0,max=1,res;
+  if(q.type==="vocab"){
+    const given=val("answer"), g=skipped?"wrong":grade(q,given,ia), sol=q.dir==="it-en"?q.w.en:q.w.it;
+    pts=g==="wrong"?0:1;
+    res={prompt:q.dir==="it-en"?q.w.it:q.w.en,given:skipped?"":given,solution:sol};
+    const s=`<span>Answer: <b>${esc(sol)}</b>${q.dir==="it-en"?` <span class="small">(${esc(q.w.it)})</span>`:""}</span>`;
+    if(g==="right") setFb("good",`<strong>Corretto!</strong>${s}`);
+    else if(g==="close") setFb("good close",`<strong>Accepted, small typo.</strong>${s}`);
+    else{setFb("bad",`<strong>${skipped?"Skipped":"Not quite"}</strong>${s}`); if(!skipped&&given.trim()) $("override").hidden=false;}
+  } else if(q.type==="form"&&q.dir==="give"){
+    const given=val("answer"); pts=!skipped&&cellOk(q.c[q.p],given,ia)?1:0;
+    res={prompt:`${q.v.inf} · ${PERSONS[q.p]} · ${TENSES[q.t]}`,given:skipped?"":given,solution:q.c[q.p].show};
+    setFb(pts?"good":"bad",`<strong>${pts?"Corretto!":skipped?"Skipped":"Not quite"}</strong><span>${PERSONS[q.p]} <b>${esc(q.c[q.p].show)}</b></span>${refTable(q)}`);
+  } else if(q.type==="form"){
+    const inf=val("answer").toLowerCase().trim(), p=val("selP"), t=val("selT");
+    const all=formIndex(ia).get(normForm(q.shown,ia))||[];
+    pts=!skipped&&all.some(e=>(e.v.inf===inf||e.v.base===inf)&&String(e.p)===p&&e.t===t)?1:0;
+    const seen=new Set(), opts=all.filter(e=>{const k=e.v.inf+e.t+e.p; if(seen.has(k))return false; seen.add(k); return true;})
+      .map(e=>`<b>${esc(e.v.inf)}</b> · ${PERSONS[e.p]} · ${TENSES[e.t]}`);
+    res={prompt:q.shown,given:skipped?"":`${inf||"?"} · ${p!==""?PERSONS[p]:"?"} · ${t?TENSES[t]:"?"}`,solution:opts.join(" or ").replace(/<\/?b>/g,"")};
+    setFb(pts?"good":"bad",`<strong>${pts?"Corretto!":skipped?"Skipped":"Not quite"}</strong><span>${opts.join("<br>or ")}</span><span class="small">${esc(q.v.en)}</span>`);
+  } else {
+    max=6; const wrong=[];
+    q.c.forEach((cell,i)=>{const ok=!skipped&&cellOk(cell,val("c"+i),ia); if(ok) pts++; else wrong.push(`${PERSONS[i]} ${cell.show}`);
+      const m=$("m"+i); m.className="mark "+(ok?"ok":"no"); m.textContent=ok?"✓":"✗ "+cell.show;});
+    res={prompt:`${q.v.inf} · ${TENSES[q.t]}`,given:skipped?"":`${pts}/6 correct`,solution:wrong.join(", ")};
+    setFb(pts===6?"good":"bad",`<strong>${pts===6?"Perfetto, 6 out of 6!":skipped?"Skipped":pts+" out of 6 correct"}</strong>`);
+  }
+  S.score+=pts; S.total+=max;
+  S.results.push({...res,ok:pts===max,pts,max,q});
+  S.answered=true;
+  $("fields").querySelectorAll("input,select").forEach(e=>e.disabled=true);
+  $("skip").disabled=true;
+  $("qscore").textContent=`Score ${S.score} / ${S.total}`;
+  $("submitBtn").textContent=S.i+1<S.qs.length?"Next":"See results";$("submitBtn").focus();
+}
+function next(){S.i++; if(S.i<S.qs.length) showQ(); else finish();}
+$("ansForm").addEventListener("submit",e=>{e.preventDefault(); if(S.answered) next(); else answer(false);});
+$("ansForm").addEventListener("keydown",e=>{
+  if(e.key!=="Enter"||!S||S.answered) return;
+  const ins=[...$("fields").querySelectorAll("input[type=text]")], i=ins.indexOf(document.activeElement);
+  if(ins.length>1&&i>-1&&i<ins.length-1){e.preventDefault();ins[i+1].focus();}
+});
+$("skip").onclick=()=>{if(!S.answered) answer(true);};
+$("override").onclick=()=>{const r=S.results[S.results.length-1]; if(r&&!r.ok){r.ok=true;r.pts=1;S.score++;$("qscore").textContent=`Score ${S.score} / ${S.total}`;$("fb").className="feedback good";$("fb").firstChild.textContent="Counted as correct.";$("override").hidden=true;$("submitBtn").focus();}};
+$("quit").onclick=()=>{ if(S.results.length) finish(true); else {$("quiz").hidden=true;$("setup").hidden=false;} };
+document.addEventListener("keydown",e=>{ if(e.key==="Enter"&&S&&S.answered&&!$("quiz").hidden&&document.activeElement!==$("submitBtn")){e.preventDefault();next();} });
+
+function finish(stopped){
+  const pct=Math.round(S.score/S.total*100);
+  $("quiz").hidden=true;$("results").hidden=false;$("logCard").hidden=false;
+  $("rScore").textContent=`${S.score} / ${S.total}`;
+  $("rPct").textContent=`${pct}% correct${stopped?" (stopped early)":""}`;
+  const wrong=S.results.filter(r=>!r.ok);
+  const col3=S.mode==="table"?"Missed":"Answer";
+  $("rMistakes").innerHTML=wrong.length?`<div class="label" style="margin-bottom:6px">To review</div><div class="tablewrap"><table><thead><tr><th>Asked</th><th>You gave</th><th>${col3}</th></tr></thead><tbody>${wrong.map(r=>`<tr><td>${esc(r.prompt)}</td><td>${r.given?esc(r.given):"<span class='small'>skipped</span>"}</td><td><b>${esc(r.solution)}</b></td></tr>`).join("")}</tbody></table></div>`:`<p style="margin:0">No mistakes. Perfetto!</p>`;
+  $("retry").hidden=!wrong.length;
+  if(S.dir==="retry"){ setTrend("rTrend",{cls:"",text:"Retry rounds are practice only and are not added to the score log."}); }
+  else{
+    const log=loadLog(), entry={date:new Date().toISOString(),mode:S.mode,dir:S.dir,correct:S.score,total:S.total,cats:S.details,mistakes:wrong.map(r=>`${r.prompt} → ${r.solution}`)};
+    log.unshift(entry); saveLog(log); renderLog();
+    setTrend("rTrend",trendFor(entry,realLog()));
+  }
+  S.lastWrong=wrong.map(r=>r.q);
+}
+$("again").onclick=()=>{$("results").hidden=true;$("logCard").hidden=true;$("setup").hidden=false;updateSetup();};
+$("retry").onclick=()=>{const w=S.lastWrong||[]; if(!w.length) return;
+  newRound(shuffle([...w]),{mode:S.mode,dir:"retry",details:"Retry of mistakes",tenses:S.tenses});};
+
+// ---------- log ----------
+const MODEL={vocab:"Vocabulary",form:"Verb forms",table:"Full conjugation"};
+const DIRL={"it-en":"IT → EN","en-it":"EN → IT","mix":"Random","give":"Verb → form","ident":"Form → verb","table":""};
+function testLabel(r){const m=MODEL[r.mode||"vocab"], d=DIRL[r.dir]??r.dir; return d?`${m} · ${d}`:m;}
+const isRetry=r=>r.dir==="retry"||r.dir==="mistakes"||r.cats==="Retry of mistakes";
+function realLog(){return loadLog().filter(r=>!isRetry(r));}
+const pctOf=rs=>{const c=rs.reduce((a,r)=>a+r.correct,0),t=rs.reduce((a,r)=>a+r.total,0);return t?Math.round(c/t*100):0;};
+const pctR=r=>Math.round(r.correct/r.total*100);
+function trendFor(entry,log){
+  const label=testLabel(entry), now=pctR(entry);
+  const prev=log.filter(r=>r.date!==entry.date&&testLabel(r)===label);
+  if(!prev.length) return {cls:"",text:`This was your first ${label} round: ${now}%. Your next round of this type will be compared with it.`};
+  const avg=pctOf(prev), d=now-avg;
+  const verdict=d>=3?"you're improving":d<=-3?"a bit below your average this time":"right on your average";
+  return {cls:d>=3?"up":d<=-3?"down":"",text:`Your overall ${label} score so far is ${avg}% and this time you scored ${now}%, so ${verdict}.`};
+}
+function setTrend(id,t){const el=$(id); el.hidden=false; el.className="trend "+(t.cls||""); el.textContent=t.text;}
+function renderLog(){
+  const log=realLog(), body=$("logBody");
+  $("logSummaryWrap").hidden=$("histLabel").hidden=$("logTrend").hidden=!log.length;
+  if(!log.length){body.innerHTML=`<tr><td colspan="3" class="empty">No rounds yet. Finish a round and it appears here with its date, test type and score.</td></tr>`;return;}
+  setTrend("logTrend",trendFor(log[0],log));
+  const groups=new Map(); log.forEach(r=>{const k=testLabel(r); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(r);});
+  const pill=p=>`<span class="pill ${p>=80?"hi":p>=50?"mid":"lo"}">${p}%</span>`;
+  $("logSummary").innerHTML=[...groups].map(([k,rs])=>`<tr><td>${esc(k)}</td><td class="num">${rs.length}</td><td class="num">${pill(pctOf(rs))}</td><td class="num">${rs[0].correct}/${rs[0].total} ${pill(pctR(rs[0]))}</td></tr>`).join("");
+  body.innerHTML=log.map(r=>{const d=new Date(r.date);
+    return `<tr><td class="num">${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</td><td>${esc(testLabel(r))}</td><td class="num">${r.correct}/${r.total} ${pill(pctR(r))}</td></tr>`;}).join("");
+}
+$("clearLog").onclick=()=>{$("clearConfirm").hidden=false;};
+$("clearNo").onclick=()=>{$("clearConfirm").hidden=true;};
+$("clearYes").onclick=()=>{saveLog([]);$("clearConfirm").hidden=true;renderLog();};
+$("copyLog").onclick=async()=>{
+  const q=s=>`"${String(s).replace(/"/g,'""')}"`;
+  const log=realLog(); const csv=["date,test,correct,total,percent,mistakes"].concat(log.map(r=>[r.date,q(testLabel(r)),r.correct,r.total,pctR(r),q((r.mistakes||[]).join("; "))].join(","))).join("\n");
+  const btn=$("copyLog");
+  try{await navigator.clipboard.writeText(csv);btn.textContent="Copied";}catch(e){btn.textContent="Copy failed";}
+  setTimeout(()=>btn.textContent="Copy as CSV",1800);
+};
+renderLog();
+</script>
+<script>
+if("serviceWorker" in navigator){addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
+</script>
+</body>
+</html>
